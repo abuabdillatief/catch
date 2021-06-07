@@ -2,6 +2,7 @@ package catch
 
 import (
 	"fmt"
+	"os"
 	"runtime"
 	"strings"
 
@@ -48,7 +49,7 @@ func CustomLog(privateLog map[string]string, printType PrintType) {
 	}
 	ei += ":  "
 	strp := strings.Repeat("_", len(l))
-	fmt.Println(strp)
+	fmt.Fprintln(os.Stdout, strp)
 	var i int
 	switch printType {
 	case TypeError:
@@ -65,11 +66,11 @@ func CustomLog(privateLog map[string]string, printType PrintType) {
 			d += ":  "
 			key += ":  "
 			if i == 0 {
-				fmt.Println(red(d), dir)
-				fmt.Println(red(ei), fmt.Sprintf(`at line: %s`, yellow(fmt.Sprintf("%d", line))))
+				fmt.Fprintln(os.Stdout, red(d), dir)
+				fmt.Fprintln(os.Stdout, red(ei), fmt.Sprintf(`at line: %s`, yellow(fmt.Sprintf("%d", line))))
 				i++
 			}
-			fmt.Println(red(key), val)
+			fmt.Fprintln(os.Stdout, red(key), val)
 		}
 	case TypeWarn:
 		for key, val := range privateLog {
@@ -85,11 +86,11 @@ func CustomLog(privateLog map[string]string, printType PrintType) {
 			d += ":  "
 			key += ":  "
 			if i == 0 {
-				fmt.Println(yellow(d), dir)
-				fmt.Println(yellow(ei), fmt.Sprintf(`at line: %s`, yellow(fmt.Sprintf("%d", line))))
+				fmt.Fprintln(os.Stdout, yellow(d), dir)
+				fmt.Fprintln(os.Stdout, yellow(ei), fmt.Sprintf(`at line: %s`, yellow(fmt.Sprintf("%d", line))))
 				i++
 			}
-			fmt.Println(yellow(key), val)
+			fmt.Fprintln(os.Stdout, yellow(key), val)
 		}
 	case TypeInfo:
 		for key, val := range privateLog {
@@ -105,14 +106,14 @@ func CustomLog(privateLog map[string]string, printType PrintType) {
 			d += ":  "
 			key += ":  "
 			if i == 0 {
-				fmt.Println(blue(d), dir)
-				fmt.Println(blue(ei), fmt.Sprintf(`at line: %s`, yellow(fmt.Sprintf("%d", line))))
+				fmt.Fprintln(os.Stdout, blue(d), dir)
+				fmt.Fprintln(os.Stdout, blue(ei), fmt.Sprintf(`at line: %s`, yellow(fmt.Sprintf("%d", line))))
 				i++
 			}
-			fmt.Println(blue(key), val)
+			fmt.Fprintln(os.Stdout, blue(key), val)
 		}
 	}
-	fmt.Printf("\n%s\n", strp)
+	fmt.Fprintf(os.Stdout, "\n%s\n", strp)
 }
 
 func DirectoryFormater(printType PrintType) (line int, res string) {
@@ -134,68 +135,68 @@ func DirectoryFormater(printType PrintType) (line int, res string) {
 
 func Error(e error, m string) {
 	line, dir := DirectoryFormater(TypeError)
-	fmt.Println("__________________")
-	fmt.Println(red("Error directory  : "), dir)
-	fmt.Printf(`%s at line: %s, message: %s`, red("Error info       : "), yellow(fmt.Sprintf("%d", line)), yellow(m))
-	fmt.Println(red("\nOriginal error   :\n"), e.Error())
-	fmt.Println("\n__________________")
+	fmt.Fprintln(os.Stdout, "__________________")
+	fmt.Fprintln(os.Stdout, red("Error directory  : "), dir)
+	fmt.Fprintf(os.Stdout, `%s at line: %s, message: %s`, red("Error info       : "), yellow(fmt.Sprintf("%d", line)), yellow(m))
+	fmt.Fprintln(os.Stdout, red("\nOriginal error   :\n"), e.Error())
+	fmt.Fprintln(os.Stdout, "\n__________________")
 }
 
 func ErrorStr(e string, m string) {
 	line, dir := DirectoryFormater(TypeError)
-	fmt.Println("__________________")
-	fmt.Println(red("Error directory  : "), dir)
-	fmt.Printf(`%s at line: %s, message: %s`, red("Error info       : "), yellow(fmt.Sprintf("%d", line)), yellow(m))
-	fmt.Println(red("\nOriginal error   :\n"), red(e))
-	fmt.Println("\n__________________")
+	fmt.Fprintln(os.Stdout, "__________________")
+	fmt.Fprintln(os.Stdout, red("Error directory  : "), dir)
+	fmt.Fprintf(os.Stdout, `%s at line: %s, message: %s`, red("Error info       : "), yellow(fmt.Sprintf("%d", line)), yellow(m))
+	fmt.Fprintln(os.Stdout, red("\nOriginal error   :\n"), red(e))
+	fmt.Fprintln(os.Stdout, "\n__________________")
 }
 
 func Warn(e error, m string) {
 	line, dir := DirectoryFormater(TypeWarn)
-	fmt.Println("__________________")
-	fmt.Println(yellow("Warning directory: "), dir)
-	fmt.Printf(`%s at line: %s, message: %s`, yellow("Warning info     : "), yellow(fmt.Sprintf("%d", line)), yellow(m))
-	fmt.Println(yellow("\nOriginal message :\n"), e.Error())
-	fmt.Println("\n__________________")
+	fmt.Fprintln(os.Stdout, "__________________")
+	fmt.Fprintln(os.Stdout, yellow("Warning directory: "), dir)
+	fmt.Fprintf(os.Stdout, `%s at line: %s, message: %s`, yellow("Warning info     : "), yellow(fmt.Sprintf("%d", line)), yellow(m))
+	fmt.Fprintln(os.Stdout, yellow("\nOriginal message :\n"), e.Error())
+	fmt.Fprintln(os.Stdout, "\n__________________")
 }
 
 func WarnStr(e string, m string) {
 	line, dir := DirectoryFormater(TypeWarn)
-	fmt.Println("__________________")
-	fmt.Println(yellow("Warning directory: "), dir)
-	fmt.Printf(`%s at line: %s, message: %s`, yellow("Warning info     : "), yellow(fmt.Sprintf("%d", line)), yellow(m))
-	fmt.Println(yellow("\nOriginal message :\n"), yellow(m))
-	fmt.Println("\n__________________")
+	fmt.Fprintln(os.Stdout, "__________________")
+	fmt.Fprintln(os.Stdout, yellow("Warning directory: "), dir)
+	fmt.Fprintf(os.Stdout, `%s at line: %s, message: %s`, yellow("Warning info     : "), yellow(fmt.Sprintf("%d", line)), yellow(m))
+	fmt.Fprintln(os.Stdout, yellow("\nOriginal message :\n"), yellow(m))
+	fmt.Fprintln(os.Stdout, "\n__________________")
 }
 
 func Inform(e error) {
-	fmt.Println("__________________")
+	fmt.Fprintln(os.Stdout, "__________________")
 	line, dir := DirectoryFormater(TypeInfo)
-	fmt.Println(blue("Current directory: "), dir)
-	fmt.Printf(`%s at line: %s, message: %s`, blue("Info             : "), yellow(fmt.Sprintf("%d", line)), yellow(e.Error()))
-	fmt.Println("\n__________________")
+	fmt.Fprintln(os.Stdout, blue("Current directory: "), dir)
+	fmt.Fprintf(os.Stdout, `%s at line: %s, message: %s`, blue("Info             : "), yellow(fmt.Sprintf("%d", line)), yellow(e.Error()))
+	fmt.Fprintln(os.Stdout, "\n__________________")
 }
 
 func InformStr(e string) {
-	fmt.Println("__________________")
+	fmt.Fprintln(os.Stdout, "__________________")
 	line, dir := DirectoryFormater(TypeInfo)
-	fmt.Println(blue("Current directory: "), dir)
-	fmt.Printf(`%s at line: %s, message: %s`, blue("Info             : "), yellow(fmt.Sprintf("%d", line)), yellow(e))
-	fmt.Println("\n__________________")
+	fmt.Fprintln(os.Stdout, blue("Current directory: "), dir)
+	fmt.Fprintf(os.Stdout, `%s at line: %s, message: %s`, blue("Info             : "), yellow(fmt.Sprintf("%d", line)), yellow(e))
+	fmt.Fprintln(os.Stdout, "\n__________________")
 }
 
 func (c *Catch) Error(e error) {
-	fmt.Println("__________________")
+	fmt.Fprintln(os.Stdout, "__________________")
 	line, dir := DirectoryFormater(TypeError)
-	fmt.Println(red("Error directory  : "), dir)
-	fmt.Printf(`%s at line: %s, message: %s`, red("Error info       : "), yellow(fmt.Sprintf("%d", line)), yellow(e.Error()))
-	fmt.Println("\n__________________")
+	fmt.Fprintln(os.Stdout, red("Error directory  : "), dir)
+	fmt.Fprintf(os.Stdout, `%s at line: %s, message: %s`, red("Error info       : "), yellow(fmt.Sprintf("%d", line)), yellow(e.Error()))
+	fmt.Fprintln(os.Stdout, "\n__________________")
 }
 
 func (c *Catch) ErrorStr(e string) {
-	fmt.Println("__________________")
+	fmt.Fprintln(os.Stdout, "__________________")
 	line, dir := DirectoryFormater(TypeError)
-	fmt.Println(red("Error directory  : "), dir)
-	fmt.Printf(`%s at line: %s, message: %s`, red("Error info       : "), yellow(fmt.Sprintf("%d", line)), yellow(e))
-	fmt.Println("\n__________________")
+	fmt.Fprintln(os.Stdout, red("Error directory  : "), dir)
+	fmt.Fprintf(os.Stdout, `%s at line: %s, message: %s`, red("Error info       : "), yellow(fmt.Sprintf("%d", line)), yellow(e))
+	fmt.Fprintln(os.Stdout, "\n__________________")
 }
