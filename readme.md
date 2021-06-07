@@ -8,7 +8,14 @@ __*catch*__ is a simple logging package that colorizes logs to help you read err
 
 # Examples:
 
-### Simple logging
+    type PrintType string
+
+    const (
+        TypeError PrintType = "Error"
+        TypeWarn  PrintType = "Warn"
+        TypeInfo  PrintType = "Info"
+    )
+## Simple logging
   	err := errors.New("mongo: no documents in result")
 	catch.Error(err, "cant find document")
 	catch.Warn(err, "level 1 warning")
@@ -16,7 +23,7 @@ __*catch*__ is a simple logging package that colorizes logs to help you read err
 
 ![example of simple logigng](./assets/image.png)
 
-### Custom logging
+## Custom logging
     var customLog = make(map[string]string)
     customLog["count"] = "first try"
     customLog["heads"] = "eeve"

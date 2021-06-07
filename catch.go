@@ -28,6 +28,7 @@ var (
 )
 
 func CustomLog(privateLog map[string]string, printType PrintType) {
+	fmt.Fprintln(os.Stdout, color.FgYellow, color.FgRed, color.FgBlue)
 	line, dir := DirectoryFormater(printType)
 	var l string
 	for key, _ := range privateLog {
