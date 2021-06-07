@@ -2,7 +2,6 @@ package catch
 
 import (
 	"fmt"
-	"os"
 	"runtime"
 	"strings"
 
@@ -27,18 +26,93 @@ var (
 	blue   = color.New(color.FgBlue).SprintFunc()
 )
 
-func NewLog(logFileName string) *Catch {
-	err := os.Remove(logFileName)
-	if err != nil {
-		return nil
+func CustomLog(privateLog map[string]string, printType PrintType) {
+	line, dir := DirectoryFormater(printType)
+	var l string
+	for key, _ := range privateLog {
+		if len(key) > len(l) {
+			l = key
+		}
 	}
-	err = os.Mkdir(logFileName, 0755)
-	if err != nil {
-		return nil
+
+	cd := "Current directory"
+	ei := "Error info"
+	if len(l) > len(cd) {
+		cd += strings.Repeat(" ", len(l)-len(cd))
 	}
-	return &Catch{
-		CatchDirectory: logFileName,
+	if len(cd) > len(ei) {
+		ei += strings.Repeat(" ", len(cd)-len(ei))
 	}
+	if len(l) > len(ei) {
+		ei += strings.Repeat(" ", len(l)-len(ei))
+	}
+	ei += ":  "
+	strp := strings.Repeat("_", len(l))
+	fmt.Println(strp)
+	var i int
+	switch printType {
+	case TypeError:
+		for key, val := range privateLog {
+			d := cd
+			if len(key) != len(cd) {
+				if len(key) > len(cd) {
+					d += strings.Repeat(" ", len(key)-len(cd))
+
+				} else if len(key) < len(cd) {
+					key += strings.Repeat(" ", len(cd)-len(key))
+				}
+			}
+			d += ":  "
+			key += ":  "
+			if i == 0 {
+				fmt.Println(red(d), dir)
+				fmt.Println(red(ei), fmt.Sprintf(`at line: %s`, yellow(fmt.Sprintf("%d", line))))
+				i++
+			}
+			fmt.Println(red(key), val)
+		}
+	case TypeWarn:
+		for key, val := range privateLog {
+			d := cd
+			if len(key) != len(cd) {
+				if len(key) > len(cd) {
+					d += strings.Repeat(" ", len(key)-len(cd))
+
+				} else if len(key) < len(cd) {
+					key += strings.Repeat(" ", len(cd)-len(key))
+				}
+			}
+			d += ":  "
+			key += ":  "
+			if i == 0 {
+				fmt.Println(yellow(d), dir)
+				fmt.Println(yellow(ei), fmt.Sprintf(`at line: %s`, yellow(fmt.Sprintf("%d", line))))
+				i++
+			}
+			fmt.Println(yellow(key), val)
+		}
+	case TypeInfo:
+		for key, val := range privateLog {
+			d := cd
+			if len(key) != len(cd) {
+				if len(key) > len(cd) {
+					d += strings.Repeat(" ", len(key)-len(cd))
+
+				} else if len(key) < len(cd) {
+					key += strings.Repeat(" ", len(cd)-len(key))
+				}
+			}
+			d += ":  "
+			key += ":  "
+			if i == 0 {
+				fmt.Println(blue(d), dir)
+				fmt.Println(blue(ei), fmt.Sprintf(`at line: %s`, yellow(fmt.Sprintf("%d", line))))
+				i++
+			}
+			fmt.Println(blue(key), val)
+		}
+	}
+	fmt.Printf("\n%s\n", strp)
 }
 
 func DirectoryFormater(printType PrintType) (line int, res string) {
