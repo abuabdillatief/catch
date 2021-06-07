@@ -51,61 +51,38 @@ func CustomLog(privateLog map[string]string, printType PrintType) {
 	strp := strings.Repeat("_", len(l))
 	fmt.Fprintln(os.Stdout, strp)
 	var i int
-	switch printType {
-	case TypeError:
-		for key, val := range privateLog {
-			d := cd
-			if len(key) != len(cd) {
-				if len(key) > len(cd) {
-					d += strings.Repeat(" ", len(key)-len(cd))
+	for key, val := range privateLog {
+		d := cd
+		if len(key) != len(cd) {
+			if len(key) > len(cd) {
+				d += strings.Repeat(" ", len(key)-len(cd))
 
-				} else if len(key) < len(cd) {
-					key += strings.Repeat(" ", len(cd)-len(key))
-				}
+			} else if len(key) < len(cd) {
+				key += strings.Repeat(" ", len(cd)-len(key))
 			}
-			d += ":  "
-			key += ":  "
+		}
+		d += ":  "
+		key += ":  "
+		switch printType {
+		case TypeError:
 			if i == 0 {
+
 				fmt.Fprintln(os.Stdout, red(d), dir)
 				fmt.Fprintln(os.Stdout, red(ei), fmt.Sprintf(`at line: %s`, yellow(fmt.Sprintf("%d", line))))
 				i++
 			}
 			fmt.Fprintln(os.Stdout, red(key), val)
-		}
-	case TypeWarn:
-		for key, val := range privateLog {
-			d := cd
-			if len(key) != len(cd) {
-				if len(key) > len(cd) {
-					d += strings.Repeat(" ", len(key)-len(cd))
-
-				} else if len(key) < len(cd) {
-					key += strings.Repeat(" ", len(cd)-len(key))
-				}
-			}
-			d += ":  "
-			key += ":  "
+		case TypeWarn:
 			if i == 0 {
+
 				fmt.Fprintln(os.Stdout, yellow(d), dir)
 				fmt.Fprintln(os.Stdout, yellow(ei), fmt.Sprintf(`at line: %s`, yellow(fmt.Sprintf("%d", line))))
 				i++
 			}
 			fmt.Fprintln(os.Stdout, yellow(key), val)
-		}
-	case TypeInfo:
-		for key, val := range privateLog {
-			d := cd
-			if len(key) != len(cd) {
-				if len(key) > len(cd) {
-					d += strings.Repeat(" ", len(key)-len(cd))
-
-				} else if len(key) < len(cd) {
-					key += strings.Repeat(" ", len(cd)-len(key))
-				}
-			}
-			d += ":  "
-			key += ":  "
+		case TypeInfo:
 			if i == 0 {
+
 				fmt.Fprintln(os.Stdout, blue(d), dir)
 				fmt.Fprintln(os.Stdout, blue(ei), fmt.Sprintf(`at line: %s`, yellow(fmt.Sprintf("%d", line))))
 				i++
@@ -113,6 +90,7 @@ func CustomLog(privateLog map[string]string, printType PrintType) {
 			fmt.Fprintln(os.Stdout, blue(key), val)
 		}
 	}
+
 	fmt.Fprintf(os.Stdout, "\n%s\n", strp)
 }
 
