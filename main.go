@@ -17,7 +17,7 @@ const (
 )
 
 func NewLog(logFile string) *model.Catch {
-	f, err := os.OpenFile(fmt.Sprintf("catch/%s.csv", logFile), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	f, err := os.OpenFile(fmt.Sprintf("./%s.catch_log.csv", logFile), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
