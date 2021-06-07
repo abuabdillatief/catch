@@ -2,7 +2,6 @@ package model
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"time"
 )
@@ -19,12 +18,14 @@ func (c *Catch) SaveToLogFile(e error) {
 	fmt.Println(c.GetFileDirectory())
 	f, err := os.OpenFile(c.GetFileDirectory(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 	defer f.Close()
-	_, err = f.Write([]byte(fmt.Sprintf("\n%s,%s", time.Now().String(), e.Error())))
+
+	t := time.Now().Format(time.RFC3339)
+	_, err = f.Write([]byte(fmt.Sprintf("\n%s,%s", t, e.Error())))
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 }
 

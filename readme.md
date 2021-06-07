@@ -31,6 +31,18 @@ __*catch*__ is a simple logging package that colorizes logs to help you read err
     catch.CustomLog(customLog, catch.TypeError)
 ![example of custom loging](./assets/custom_log.png)
 
+## Create, save and delete log file
+    err := errors.New("mongo: no documents in result")
+	c := catch.NewLog("catch")
+	c.SaveToLogFile(err)
+After saving log file, file will look like this:
+
+![example of custom loging](./assets/log_file.png)
+
+To delete log file, simply call:
+
+    c.DeleteLogFile()
+
 # Credits
 - [Color by fatih](https://github.com/fatih/color)
 
