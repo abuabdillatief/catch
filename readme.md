@@ -17,24 +17,26 @@ __*catch*__ is a simple logging package that colorizes logs to help you read err
     )
 ## Simple logging
   	err := errors.New("mongo: no documents in result")
-	catch.Error(err, "cant find document")
-	catch.Warn(err, "level 1 warning")
-	catch.Inform(err)
+	err2 := errors.New("file extension is not supported")
+	m := "error report from catch"
+
+    //create a new instance with our log file name
+	c := catch.NewLog("catch")
+
+    //call log functions
+	c.Error(err, m)
+	c.Warn(err, m)
+	c.Inform(err)
+
+    
 
 ![example of simple logigng](./assets/image.png)
 
-## Custom logging
-    var customLog = make(map[string]string)
-    customLog["count"] = "first try"
-    customLog["heads"] = "eeve"
-
-    catch.CustomLog(customLog, catch.TypeError)
-![example of custom loging](./assets/custom_log.png)
-
 ## Create, save and delete log file
-    err := errors.New("mongo: no documents in result")
-	c := catch.NewLog("catch")
+
+    //save logs to predefined file which is "catch"
 	c.SaveToLogFile(err)
+	c.SaveToLogFile(err2)
 After saving log file, file will look like this:
 
 ![example of custom loging](./assets/log_file.png)

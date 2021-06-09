@@ -188,7 +188,6 @@ func (c *CatchLogger) GetLogDirectory() string {
 }
 
 func (c *CatchLogger) SaveToLogFile(e error) {
-	fmt.Println(c.GetLogDirectory())
 	f, err := os.OpenFile(c.GetLogDirectory(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		panic(err)
