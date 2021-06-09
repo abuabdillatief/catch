@@ -215,69 +215,78 @@ func (c *CatchLogger) DeleteLogFile() {
 	}
 }
 
-// func CustomLog(privateLog map[string]string, printType model.PrintType) {
-// 	fmt.Fprintln(os.Stdout, color.FgYellow, color.FgRed, color.FgBlue)
-// 	line, dir := model.DirectoryFormater(printType)
-// 	var l string
-// 	for key, _ := range privateLog {
-// 		if len(key) > len(l) {
-// 			l = key
-// 		}
-// 	}
+func (c CatchLogger) CustomLog(privateLog map[string]string, printType model.PrintType) {
+	var B bytes.Buffer
+	c.Logger = log.New(&B, "", log.Llongfile)
+	c.Output(2, "")
+	inf := strings.Split(fmt.Sprintf("%v", &B), ":")
 
-// 	cd := "Current directory"
-// 	ei := "Error info"
-// 	if len(l) > len(cd) {
-// 		cd += strings.Repeat(" ", len(l)-len(cd))
-// 	}
-// 	if len(cd) > len(ei) {
-// 		ei += strings.Repeat(" ", len(cd)-len(ei))
-// 	}
-// 	if len(l) > len(ei) {
-// 		ei += strings.Repeat(" ", len(l)-len(ei))
-// 	}
-// 	ei += ":  "
-// 	strp := strings.Repeat("_", len(l))
-// 	fmt.Fprintln(os.Stdout, strp)
-// 	var i int
-// 	for key, val := range privateLog {
-// 		d := cd
-// 		if len(key) != len(cd) {
-// 			if len(key) > len(cd) {
-// 				d += strings.Repeat(" ", len(key)-len(cd))
+	line := inf[1]
+	dir := inf[0]
 
-// 			} else if len(key) < len(cd) {
-// 				key += strings.Repeat(" ", len(cd)-len(key))
-// 			}
-// 		}
-// 		d += ":  "
-// 		key += ":  "
-// 		switch printType {
-// 		case model.TypeError:
-// 			if i == 0 {
+	var l string
+	for key, _ := range privateLog {
+		if len(key) > len(l) {
+			l = key
+		}
+	}
 
-// 				fmt.Fprintln(os.Stdout, model.Red(d), dir)
-// 				fmt.Fprintln(os.Stdout, model.Red(ei), fmt.Sprintf(`at line: %s`, model.Yellow(fmt.Sprintf("%d", line))))
-// 				i++
-// 			}
-// 			fmt.Fprintln(os.Stdout, model.Red(key), val)
-// 		case model.TypeWarn:
-// 			if i == 0 {
+	cd := "Current directory"
+	ei := "Error info"
+	if len(l) > len(cd) {
+		cd += strings.Repeat(" ", len(l)-len(cd))
+	} else {
+		l += strings.Repeat(" ", len(cd)-len(l))
+	}
 
-// 				fmt.Fprintln(os.Stdout, model.Yellow(d), dir)
-// 				fmt.Fprintln(os.Stdout, model.Yellow(ei), fmt.Sprintf(`at line: %s`, model.Yellow(fmt.Sprintf("%d", line))))
-// 				i++
-// 			}
-// 			fmt.Fprintln(os.Stdout, model.Yellow(key), val)
-// 		case model.TypeInfo:
-// 			if i == 0 {
+	if len(cd) > len(ei) {
+		ei += strings.Repeat(" ", len(cd)-len(ei))
+	}
+	if len(l) > len(ei) {
+		ei += strings.Repeat(" ", len(l)-len(ei))
+	}
+	ei += ":  "
+	strp := strings.Repeat("_", len(l))
+	fmt.Fprintln(os.Stdout, strp)
+	var i int
+	for key, val := range privateLog {
+		d := cd
+		if len(key) != len(cd) {
+			if len(key) > len(cd) {
+				d += strings.Repeat(" ", len(key)-len(cd))
 
-// 				fmt.Fprintln(os.Stdout, model.Blue(d), dir)
-// 				fmt.Fprintln(os.Stdout, model.Blue(ei), fmt.Sprintf(`at line: %s`, model.Yellow(fmt.Sprintf("%d", line))))
-// 				i++
-// 			}
-// 			fmt.Fprintln(os.Stdout, model.Blue(key), val)
-// 		}
-// 	}
-// 	fmt.Fprintf(os.Stdout, "\n%s\n", strp)
-// }
+			} else if len(key) < len(cd) {
+				key += strings.Repeat(" ", len(cd)-len(key))
+			}
+		}
+		d += ":  "
+		key += ":  "
+		switch printType {
+		case model.TypeError:
+			if i == 0 {
+
+				fmt.Fprintln(os.Stdout, model.Red(d), DirectoryFormater(dir, model.TypeError))
+				fmt.Fprintln(os.Stdout, model.Red(ei), fmt.Sprintf(`at line: %s`, model.Yellow(line)))
+				i++
+			}
+			fmt.Fprintln(os.Stdout, model.Red(key), val)
+		case model.TypeWarn:
+			if i == 0 {
+
+				fmt.Fprintln(os.Stdout, model.Yellow(d), DirectoryFormater(dir, model.TypeWarn))
+				fmt.Fprintln(os.Stdout, model.Yellow(ei), fmt.Sprintf(`at line: %s`, model.Yellow(line)))
+				i++
+			}
+			fmt.Fprintln(os.Stdout, model.Yellow(key), val)
+		case model.TypeInfo:
+			if i == 0 {
+
+				fmt.Fprintln(os.Stdout, model.Blue(d), DirectoryFormater(dir, model.TypeInfo))
+				fmt.Fprintln(os.Stdout, model.Blue(ei), fmt.Sprintf(`at line: %s`, model.Yellow(line)))
+				i++
+			}
+			fmt.Fprintln(os.Stdout, model.Blue(key), val)
+		}
+	}
+	fmt.Fprintf(os.Stdout, "%s\n", strp)
+}
