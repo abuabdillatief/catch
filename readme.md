@@ -28,11 +28,25 @@ __*catch*__ is a simple logging package that colorizes logs to help you read err
 	c.Warn(err, m)
 	c.Inform(err)
 
-    
-
 ![example of simple logigng](./assets/image.png)
 
-## Create, save and delete log file
+## Custom logging
+    customLog := make(map[string]string)
+	
+	customLog["start"] = "0"
+	customLog["end"] = "15"
+
+	c.CustomLog(customLog, catch.TypeError)
+	c.CustomLog(customLog, catch.TypeWarn)
+	c.CustomLog(customLog, catch.TypeInfo)
+
+![example of custom logigng](./assets/custom_log.png)
+
+
+    
+
+
+## Save and Delete log file
 
     //save logs to predefined file which is "catch"
 	c.SaveToLogFile(err)
