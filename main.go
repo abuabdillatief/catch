@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/catch/model"
 )
@@ -24,13 +25,13 @@ type CatchLogger struct {
 var C CatchLogger
 
 func NewLog(logFile string) CatchLogger {
-	C.CatchLogDirectory = fmt.Sprintf("./%s.catch_log.csv", logFile)
+	C.CatchLogDirectory = fmt.Sprintf("./%s.clog.csv", logFile)
 	f, err := os.OpenFile(C.CatchLogDirectory, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	_, err = f.Write([]byte("date,file,line,message"))
+	_, err = f.Write([]byte("date,directory,message"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -66,7 +67,7 @@ func (c CatchLogger) Warn(e error, m string) {
 	inf := strings.Split(fmt.Sprintf("%v", &B), ":")
 
 	fmt.Fprintln(os.Stdout, "__________________")
-	c.ErrLogOut(e, m,DirectoryFormater(inf[0], model.TypeWarn), inf[1], model.TypeWarn)
+	c.ErrLogOut(e, m, DirectoryFormater(inf[0], model.TypeWarn), inf[1], model.TypeWarn)
 	fmt.Fprintln(os.Stdout, "__________________")
 }
 
@@ -77,7 +78,7 @@ func (c CatchLogger) WarnStr(e string, m string) {
 	inf := strings.Split(fmt.Sprintf("%v", &B), ":")
 
 	fmt.Fprintln(os.Stdout, "__________________")
-	c.StrLogOut(e, m,DirectoryFormater(inf[0], model.TypeWarn), inf[1], model.TypeWarn)
+	c.StrLogOut(e, m, DirectoryFormater(inf[0], model.TypeWarn), inf[1], model.TypeWarn)
 	fmt.Fprintln(os.Stdout, "__________________")
 }
 
@@ -180,6 +181,39 @@ func DirectoryFormater(dir string, printType model.PrintType) string {
 		s = append(s, model.Blue(d))
 	}
 	return strings.Join(s, "/")
+}
+
+func (c *CatchLogger) GetLogDirectory() string {
+	return c.CatchLogDirectory
+}
+
+func (c *CatchLogger) SaveToLogFile(e error) {
+	fmt.Println(c.GetLogDirectory())
+	f, err := os.OpenFile(c.GetLogDirectory(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+
+	var B bytes.Buffer
+	c.Logger = log.New(&B, "", log.Llongfile)
+	c.Output(2, "")
+	dir := strings.Split(fmt.Sprintf("%v", &B), "/")
+	d := dir[len(dir)-1]
+	s := d[:len(d)-3]
+
+	t := time.Now().Format(time.RFC3339)
+	_, err = f.Write([]byte(fmt.Sprintf("\n%s,%s,%s", t, s, e.Error())))
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (c *CatchLogger) DeleteLogFile() {
+	err := os.Remove(c.GetLogDirectory())
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+	}
 }
 
 // func CustomLog(privateLog map[string]string, printType model.PrintType) {
