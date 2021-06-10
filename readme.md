@@ -1,5 +1,5 @@
 # _Catch_
-__*catch*__ is a simple logging package that colorizes logs to help you read errors more easily and less frustrating.
+__*catch*__ is a simple logging package which helps you read errors more easily and less frustrating.
 
 
 # Install:
