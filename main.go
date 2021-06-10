@@ -299,13 +299,72 @@ func (c CatchLogger) CustomLog(privateLog map[string]string, printType PrintType
 }
 
 func (c CatchLogger) HttpMiddlewareLogger(createLog bool) func(http.Handler) http.Handler {
+	var B bytes.Buffer
+	c.Logger = log.New(&B, "", log.Llongfile)
+	c.Output(2, "")
+
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			headers := make(map[string]string)
 			for k, v := range r.Header {
 				headers[k] = v[0]
 			}
-			c.CustomLog(headers, TypeInfo)
+			var l string
+			for key, _ := range headers {
+				if len(key) > len(l) {
+					l = key
+				}
+			}
+			strp := strings.Repeat("_", len(l))
+			fmt.Fprintln(os.Stdout, strp)
+			var i int
+			for key, val := range headers {
+				key += ":  "
+				if i == 0 {
+					i++
+				}
+				fmt.Fprintln(os.Stdout, Blue(key), val)
+			}
+			fmt.Fprintf(os.Stdout, "%s\n", strp)
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+func (c CatchLogger) HttpMiddlewareLoggerWithKey(createLog bool, keys ...string) func(http.Handler) http.Handler {
+	var B bytes.Buffer
+	c.Logger = log.New(&B, "", log.Llongfile)
+	c.Output(2, "")
+
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			headers := make(map[string]string)
+			targetKeys := make(map[string]bool)
+			for _, k := range keys {
+				targetKeys[k] = true
+			}
+			for k, v := range r.Header {
+				if targetKeys[k] {
+					headers[k] = v[0]
+				}
+			}
+			var l string
+			for key, _ := range headers {
+				if len(key) > len(l) {
+					l = key
+				}
+			}
+			strp := strings.Repeat("_", len(l))
+			fmt.Fprintln(os.Stdout, strp)
+			var i int
+			for key, val := range headers {
+				key += ":  "
+				if i == 0 {
+					i++
+				}
+				fmt.Fprintln(os.Stdout, Blue(key), val)
+			}
+			fmt.Fprintf(os.Stdout, "%s\n", strp)
 			next.ServeHTTP(w, r)
 		})
 	}
