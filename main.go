@@ -351,18 +351,16 @@ func (c CatchLogger) HttpMiddlewareLoggerWithKeys(createLog bool, keys ...string
 					l = key
 				}
 			}
-			strp := strings.Repeat("_", len(l))
-			log.Println(strp)
-			var i int
+
 			for key, val := range headers {
-				key += ":  "
-				if i == 0 {
-					i++
+				if len(key) < len(l) {
+					key += strings.Repeat(" ", len(l)-len(key))
 				}
+				key += ":  "
 				log.Println(Blue(key), val)
 			}
-			fmt.Fprintf(os.Stdout, "%s\n", strp)
 			next.ServeHTTP(w, r)
 		})
 	}
 }
+
