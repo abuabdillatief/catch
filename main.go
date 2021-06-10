@@ -341,6 +341,7 @@ func (c CatchLogger) HttpMiddlewareLoggerWithKey(createLog bool, keys ...string)
 			headers := make(map[string]string)
 			targetKeys := make(map[string]bool)
 			for _, k := range keys {
+				fmt.Println(k, "<- keys")
 				targetKeys[k] = true
 			}
 			for k, v := range r.Header {
