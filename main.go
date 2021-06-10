@@ -4,17 +4,12 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"strings"
 	"time"
 
-	"github.com/catch/model"
-)
-
-const (
-	TypeError = model.TypeError
-	TypeWarn  = model.TypeWarn
-	TypeInfo  = model.TypeInfo
+	"github.com/fatih/color"
 )
 
 type CatchLogger struct {
@@ -22,7 +17,38 @@ type CatchLogger struct {
 	CatchLogDirectory string
 }
 
+type PrintType string
+
+//====================================================
+const (
+	TypeError PrintType = "Error"
+	TypeWarn  PrintType = "Warn"
+	TypeInfo  PrintType = "Info"
+)
+
+var (
+	Yellow = color.New(color.FgYellow).SprintFunc()
+	Red    = color.New(color.FgRed).SprintFunc()
+	Blue   = color.New(color.FgBlue).SprintFunc()
+)
+
 var C CatchLogger
+
+//====================================================
+func DirectoryFormater(dir string, printType PrintType) string {
+	s := strings.Split(dir, "/")
+	d := s[len(s)-1]
+	s = s[:len(s)-1]
+	switch printType {
+	case TypeError:
+		s = append(s, Red(d))
+	case TypeWarn:
+		s = append(s, Yellow(d))
+	case TypeInfo:
+		s = append(s, Blue(d))
+	}
+	return strings.Join(s, "/")
+}
 
 func NewLog(logFile string) CatchLogger {
 	C.CatchLogDirectory = fmt.Sprintf("./%s.clog.csv", logFile)
@@ -45,7 +71,7 @@ func (c CatchLogger) Error(e error, m string) {
 	inf := strings.Split(fmt.Sprintf("%v", &B), ":")
 
 	fmt.Fprintln(os.Stdout, "__________________")
-	c.ErrLogOut(e, m, DirectoryFormater(inf[0], model.TypeError), inf[1], model.TypeError)
+	c.ErrLogOut(e, m, DirectoryFormater(inf[0], TypeError), inf[1], TypeError)
 	fmt.Fprintln(os.Stdout, "__________________")
 }
 
@@ -56,7 +82,7 @@ func (c CatchLogger) ErrorStr(e string, m string) {
 	inf := strings.Split(fmt.Sprintf("%v", &B), ":")
 
 	fmt.Fprintln(os.Stdout, "__________________")
-	c.StrLogOut(e, m, DirectoryFormater(inf[0], model.TypeError), inf[1], model.TypeError)
+	c.StrLogOut(e, m, DirectoryFormater(inf[0], TypeError), inf[1], TypeError)
 	fmt.Fprintln(os.Stdout, "__________________")
 }
 
@@ -67,7 +93,7 @@ func (c CatchLogger) Warn(e error, m string) {
 	inf := strings.Split(fmt.Sprintf("%v", &B), ":")
 
 	fmt.Fprintln(os.Stdout, "__________________")
-	c.ErrLogOut(e, m, DirectoryFormater(inf[0], model.TypeWarn), inf[1], model.TypeWarn)
+	c.ErrLogOut(e, m, DirectoryFormater(inf[0], TypeWarn), inf[1], TypeWarn)
 	fmt.Fprintln(os.Stdout, "__________________")
 }
 
@@ -78,7 +104,7 @@ func (c CatchLogger) WarnStr(e string, m string) {
 	inf := strings.Split(fmt.Sprintf("%v", &B), ":")
 
 	fmt.Fprintln(os.Stdout, "__________________")
-	c.StrLogOut(e, m, DirectoryFormater(inf[0], model.TypeWarn), inf[1], model.TypeWarn)
+	c.StrLogOut(e, m, DirectoryFormater(inf[0], TypeWarn), inf[1], TypeWarn)
 	fmt.Fprintln(os.Stdout, "__________________")
 }
 
@@ -89,7 +115,7 @@ func (c CatchLogger) Inform(e error) {
 	inf := strings.Split(fmt.Sprintf("%v", &B), ":")
 
 	fmt.Fprintln(os.Stdout, "__________________")
-	c.ErrLogOut(e, "", DirectoryFormater(inf[0], model.TypeInfo), inf[1], model.TypeInfo)
+	c.ErrLogOut(e, "", DirectoryFormater(inf[0], TypeInfo), inf[1], TypeInfo)
 	fmt.Fprintln(os.Stdout, "__________________")
 }
 
@@ -100,95 +126,76 @@ func (c CatchLogger) InformStr(e string) {
 	inf := strings.Split(fmt.Sprintf("%v", &B), ":")
 
 	fmt.Fprintln(os.Stdout, "__________________")
-	c.StrLogOut(e, "", DirectoryFormater(inf[0], model.TypeInfo), inf[1], model.TypeInfo)
+	c.StrLogOut(e, "", DirectoryFormater(inf[0], TypeInfo), inf[1], TypeInfo)
 	fmt.Fprintln(os.Stdout, "__________________")
 }
 
-func (c CatchLogger) ErrLogOut(e error, m, dir, line string, typeError model.PrintType) {
+func (c CatchLogger) ErrLogOut(e error, m, dir, line string, typeError PrintType) {
 	switch typeError {
-	case model.TypeInfo:
-		fmt.Fprintln(os.Stdout, model.Blue("Error directory  : "), dir)
-		fmt.Fprintf(os.Stdout, `%s at line: %s`, model.Blue("Error info       : "), model.Yellow(line))
-
-		if len(e.Error()) > len(dir) {
-			fmt.Fprintln(os.Stdout, model.Blue("\nOriginal error   :\n"), e.Error())
-		} else {
-			fmt.Fprintln(os.Stdout, model.Blue("\nOriginal error   : "), e.Error())
-		}
-	case model.TypeWarn:
-		fmt.Fprintln(os.Stdout, model.Yellow("Error directory  : "), dir)
-		fmt.Fprintf(os.Stdout, `%s at line: %s, message: %s`, model.Yellow("Error info       : "), model.Yellow(line), model.Yellow(m))
-
-		if len(e.Error()) > len(dir) {
-			fmt.Fprintln(os.Stdout, model.Yellow("\nOriginal error   :\n"), e.Error())
-		} else {
-			fmt.Fprintln(os.Stdout, model.Yellow("\nOriginal error   : "), e.Error())
-		}
-	case model.TypeError:
-		fmt.Fprintln(os.Stdout, model.Red("Error directory  : "), dir)
-		fmt.Fprintf(os.Stdout, `%s at line: %s, message: %s`, model.Red("Error info       : "), model.Yellow(line), model.Yellow(m))
-
-		if len(e.Error()) > len(dir) {
-			fmt.Fprintln(os.Stdout, model.Red("\nOriginal error   :\n"), e.Error())
-		} else {
-			fmt.Fprintln(os.Stdout, model.Red("\nOriginal error   : "), e.Error())
-		}
-	}
-}
-
-func (c CatchLogger) StrLogOut(e, m, dir, line string, typeError model.PrintType) {
-	switch typeError {
-	case model.TypeInfo:
-		fmt.Fprintln(os.Stdout, model.Blue("Error directory  : "), dir)
-		fmt.Fprintf(os.Stdout, `%s at line: %s`, model.Blue("Error info       : "), model.Yellow(line))
-
-		if len(e) > len(dir) {
-			fmt.Fprintln(os.Stdout, model.Blue("\nOriginal error   :\n"), e)
-		} else {
-			fmt.Fprintln(os.Stdout, model.Blue("\nOriginal error   : "), e)
-		}
-	case model.TypeWarn:
-		fmt.Fprintln(os.Stdout, model.Yellow("Error directory  : "), dir)
-		fmt.Fprintf(os.Stdout, `%s at line: %s, message: %s`, model.Yellow("Error info       : "), model.Yellow(line), model.Yellow(m))
-
-		if len(e) > len(dir) {
-			fmt.Fprintln(os.Stdout, model.Yellow("\nOriginal error   :\n"), e)
-		} else {
-			fmt.Fprintln(os.Stdout, model.Yellow("\nOriginal error   : "), e)
-		}
-	case model.TypeError:
-		fmt.Fprintln(os.Stdout, model.Red("Error directory  : "), dir)
-		fmt.Fprintf(os.Stdout, `%s at line: %s, message: %s`, model.Red("Error info       : "), model.Yellow(line), model.Yellow(m))
-
-		if len(e) > len(dir) {
-			fmt.Fprintln(os.Stdout, model.Red("\nOriginal error   :\n"), e)
-		} else {
-			fmt.Fprintln(os.Stdout, model.Red("\nOriginal error   : "), e)
-		}
-	}
-}
-
-func DirectoryFormater(dir string, printType model.PrintType) string {
-	s := strings.Split(dir, "/")
-	d := s[len(s)-1]
-	s = s[:len(s)-1]
-	switch printType {
-	case TypeError:
-		s = append(s, model.Red(d))
-	case TypeWarn:
-		s = append(s, model.Yellow(d))
 	case TypeInfo:
-		s = append(s, model.Blue(d))
+		fmt.Fprintln(os.Stdout, Blue("Error directory  : "), dir)
+		fmt.Fprintf(os.Stdout, `%s at line: %s`, Blue("Error info       : "), Yellow(line))
+
+		if len(e.Error()) > len(dir) {
+			fmt.Fprintln(os.Stdout, Blue("\nOriginal error   :\n"), e.Error())
+		} else {
+			fmt.Fprintln(os.Stdout, Blue("\nOriginal error   : "), e.Error())
+		}
+	case TypeWarn:
+		fmt.Fprintln(os.Stdout, Yellow("Error directory  : "), dir)
+		fmt.Fprintf(os.Stdout, `%s at line: %s, message: %s`, Yellow("Error info       : "), Yellow(line), Yellow(m))
+
+		if len(e.Error()) > len(dir) {
+			fmt.Fprintln(os.Stdout, Yellow("\nOriginal error   :\n"), e.Error())
+		} else {
+			fmt.Fprintln(os.Stdout, Yellow("\nOriginal error   : "), e.Error())
+		}
+	case TypeError:
+		fmt.Fprintln(os.Stdout, Red("Error directory  : "), dir)
+		fmt.Fprintf(os.Stdout, `%s at line: %s, message: %s`, Red("Error info       : "), Yellow(line), Yellow(m))
+
+		if len(e.Error()) > len(dir) {
+			fmt.Fprintln(os.Stdout, Red("\nOriginal error   :\n"), e.Error())
+		} else {
+			fmt.Fprintln(os.Stdout, Red("\nOriginal error   : "), e.Error())
+		}
 	}
-	return strings.Join(s, "/")
 }
 
-func (c *CatchLogger) GetLogDirectory() string {
-	return c.CatchLogDirectory
+func (c CatchLogger) StrLogOut(e, m, dir, line string, typeError PrintType) {
+	switch typeError {
+	case TypeInfo:
+		fmt.Fprintln(os.Stdout, Blue("Error directory  : "), dir)
+		fmt.Fprintf(os.Stdout, `%s at line: %s`, Blue("Error info       : "), Yellow(line))
+
+		if len(e) > len(dir) {
+			fmt.Fprintln(os.Stdout, Blue("\nOriginal error   :\n"), e)
+		} else {
+			fmt.Fprintln(os.Stdout, Blue("\nOriginal error   : "), e)
+		}
+	case TypeWarn:
+		fmt.Fprintln(os.Stdout, Yellow("Error directory  : "), dir)
+		fmt.Fprintf(os.Stdout, `%s at line: %s, message: %s`, Yellow("Error info       : "), Yellow(line), Yellow(m))
+
+		if len(e) > len(dir) {
+			fmt.Fprintln(os.Stdout, Yellow("\nOriginal error   :\n"), e)
+		} else {
+			fmt.Fprintln(os.Stdout, Yellow("\nOriginal error   : "), e)
+		}
+	case TypeError:
+		fmt.Fprintln(os.Stdout, Red("Error directory  : "), dir)
+		fmt.Fprintf(os.Stdout, `%s at line: %s, message: %s`, Red("Error info       : "), Yellow(line), Yellow(m))
+
+		if len(e) > len(dir) {
+			fmt.Fprintln(os.Stdout, Red("\nOriginal error   :\n"), e)
+		} else {
+			fmt.Fprintln(os.Stdout, Red("\nOriginal error   : "), e)
+		}
+	}
 }
 
 func (c *CatchLogger) SaveToLogFile(e error) {
-	f, err := os.OpenFile(c.GetLogDirectory(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	f, err := os.OpenFile(c.CatchLogDirectory, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		panic(err)
 	}
@@ -209,13 +216,13 @@ func (c *CatchLogger) SaveToLogFile(e error) {
 }
 
 func (c *CatchLogger) DeleteLogFile() {
-	err := os.Remove(c.GetLogDirectory())
+	err := os.Remove(c.CatchLogDirectory)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
 	}
 }
 
-func (c CatchLogger) CustomLog(privateLog map[string]string, printType model.PrintType) {
+func (c CatchLogger) CustomLog(privateLog map[string]string, printType PrintType) {
 	var B bytes.Buffer
 	c.Logger = log.New(&B, "", log.Llongfile)
 	c.Output(2, "")
@@ -262,31 +269,44 @@ func (c CatchLogger) CustomLog(privateLog map[string]string, printType model.Pri
 		d += ":  "
 		key += ":  "
 		switch printType {
-		case model.TypeError:
+		case TypeError:
 			if i == 0 {
 
-				fmt.Fprintln(os.Stdout, model.Red(d), DirectoryFormater(dir, model.TypeError))
-				fmt.Fprintln(os.Stdout, model.Red(ei), fmt.Sprintf(`at line: %s`, model.Yellow(line)))
+				fmt.Fprintln(os.Stdout, Red(d), DirectoryFormater(dir, TypeError))
+				fmt.Fprintln(os.Stdout, Red(ei), fmt.Sprintf(`at line: %s`, Yellow(line)))
 				i++
 			}
-			fmt.Fprintln(os.Stdout, model.Red(key), val)
-		case model.TypeWarn:
+			fmt.Fprintln(os.Stdout, Red(key), val)
+		case TypeWarn:
 			if i == 0 {
 
-				fmt.Fprintln(os.Stdout, model.Yellow(d), DirectoryFormater(dir, model.TypeWarn))
-				fmt.Fprintln(os.Stdout, model.Yellow(ei), fmt.Sprintf(`at line: %s`, model.Yellow(line)))
+				fmt.Fprintln(os.Stdout, Yellow(d), DirectoryFormater(dir, TypeWarn))
+				fmt.Fprintln(os.Stdout, Yellow(ei), fmt.Sprintf(`at line: %s`, Yellow(line)))
 				i++
 			}
-			fmt.Fprintln(os.Stdout, model.Yellow(key), val)
-		case model.TypeInfo:
+			fmt.Fprintln(os.Stdout, Yellow(key), val)
+		case TypeInfo:
 			if i == 0 {
 
-				fmt.Fprintln(os.Stdout, model.Blue(d), DirectoryFormater(dir, model.TypeInfo))
-				fmt.Fprintln(os.Stdout, model.Blue(ei), fmt.Sprintf(`at line: %s`, model.Yellow(line)))
+				fmt.Fprintln(os.Stdout, Blue(d), DirectoryFormater(dir, TypeInfo))
+				fmt.Fprintln(os.Stdout, Blue(ei), fmt.Sprintf(`at line: %s`, Yellow(line)))
 				i++
 			}
-			fmt.Fprintln(os.Stdout, model.Blue(key), val)
+			fmt.Fprintln(os.Stdout, Blue(key), val)
 		}
 	}
 	fmt.Fprintf(os.Stdout, "%s\n", strp)
+}
+
+func (c CatchLogger) HttpMiddlewareLogger(createLog bool) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			headers := make(map[string]string)
+			for k, v := range r.Header {
+				headers[k] = v[0]
+			}
+			c.CustomLog(headers, TypeInfo)
+			next.ServeHTTP(w, r)
+		})
+	}
 }
