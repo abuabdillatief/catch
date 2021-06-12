@@ -2,6 +2,7 @@ package catch
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -42,11 +43,11 @@ func DirectoryFormater(dir string, printType PrintType) string {
 	s = s[:len(s)-1]
 	switch printType {
 	case TypeError:
-		s = append(s, Red(d))
+		s = append(s, color.New(color.FgRed, color.Bold).Add(color.Underline).SprintFunc()(d))
 	case TypeWarn:
-		s = append(s, Yellow(d))
+		s = append(s, color.New(color.FgYellow, color.Bold).Add(color.Underline).SprintFunc()(d))
 	case TypeInfo:
-		s = append(s, Blue(d))
+		s = append(s, color.New(color.FgBlue, color.Bold).Add(color.Underline).SprintFunc()(d))
 	}
 	return strings.Join(s, "/")
 }
@@ -150,12 +151,15 @@ func (c CatchLogger) InformStr(e string) {
 }
 
 func (c CatchLogger) ErrLogOut(funcName string, e error, m, dir, line string, typeError PrintType) {
+	if e == nil {
+		e = errors.New("no error")
+	}
 	switch typeError {
 	case TypeInfo:
 		log.Println(Blue("Working directory: "), dir)
 		log.Println(Blue("Function Name    : "), Blue(funcName))
 
-		log.Printf(`%s at line: %s`, Blue("Error info       : "), Yellow(line))
+		log.Printf(`%s at line: %s`, Blue("Location info    : "), Yellow(line))
 
 		if len(e.Error()) > len(dir) {
 			log.Println(Blue("Original error   :\n"), e.Error())
@@ -221,6 +225,9 @@ func (c CatchLogger) StrLogOut(funcName, e, m, dir, line string, typeError Print
 }
 
 func (c *CatchLogger) SaveToLogFile(e error) {
+	if e == nil {
+		e = errors.New("no error")
+	}
 	f, err := os.OpenFile(c.CatchLogDirectory, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		panic(err)
