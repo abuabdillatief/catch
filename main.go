@@ -1,4 +1,4 @@
-package catch
+package main
 
 import (
 	"bytes"
@@ -50,8 +50,8 @@ func DirectoryFormater(dir string, printType PrintType) string {
 	return strings.Join(s, "/")
 }
 
-func NewLog(logFile string) CatchLogger {
-	C.CatchLogDirectory = fmt.Sprintf("./%s.clog.csv", logFile)
+func NewLog() CatchLogger {
+	C.CatchLogDirectory = "./catch.clog.csv"
 	f, err := os.OpenFile(C.CatchLogDirectory, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatal(err)
@@ -232,7 +232,7 @@ func (c CatchLogger) CustomLog(privateLog map[string]string, printType PrintType
 	dir := inf[0]
 
 	var l string
-	for key, _ := range privateLog {
+	for key := range privateLog {
 		if len(key) > len(l) {
 			l = key
 		}
@@ -298,7 +298,7 @@ func (c CatchLogger) CustomLog(privateLog map[string]string, printType PrintType
 	fmt.Fprintf(os.Stdout, "%s\n", strp)
 }
 
-func (c CatchLogger) HttpMiddlewareLogger(createLog bool) func(http.Handler) http.Handler {
+func (c CatchLogger) MiddlewareLogger(createLog bool) func(http.Handler) http.Handler {
 	var B bytes.Buffer
 	c.Logger = log.New(&B, "", log.Llongfile)
 	c.Output(2, "")
@@ -310,7 +310,7 @@ func (c CatchLogger) HttpMiddlewareLogger(createLog bool) func(http.Handler) htt
 				headers[k] = v[0]
 			}
 			var l string
-			for key, _ := range headers {
+			for key := range headers {
 				if len(key) > len(l) {
 					l = key
 				}
@@ -331,7 +331,7 @@ func (c CatchLogger) HttpMiddlewareLogger(createLog bool) func(http.Handler) htt
 	}
 }
 
-func (c CatchLogger) HttpMiddlewareLoggerWithKeys(createLog bool, keys ...string) func(http.Handler) http.Handler {
+func (c CatchLogger) MiddlewareLoggerWithKeys(createLog bool, keys ...string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			headers := make(map[string]string)
@@ -346,7 +346,7 @@ func (c CatchLogger) HttpMiddlewareLoggerWithKeys(createLog bool, keys ...string
 				}
 			}
 			var l string
-			for key, _ := range headers {
+			for key := range headers {
 				if len(key) > len(l) {
 					l = key
 				}
@@ -363,4 +363,3 @@ func (c CatchLogger) HttpMiddlewareLoggerWithKeys(createLog bool, keys ...string
 		})
 	}
 }
-
