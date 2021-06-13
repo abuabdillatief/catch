@@ -23,15 +23,18 @@ type PrintType string
 
 //====================================================
 const (
-	TypeError PrintType = "Error"
-	TypeWarn  PrintType = "Warn"
-	TypeInfo  PrintType = "Info"
+	TypeError   PrintType = "Error"
+	TypeWarn    PrintType = "Warn"
+	TypeInfo    PrintType = "Info"
+	TypeSuccess PrintType = "Success"
 )
 
 var (
-	Yellow = color.New(color.FgYellow, color.Bold).SprintFunc()
-	Red    = color.New(color.FgRed, color.Bold).SprintFunc()
-	Blue   = color.New(color.FgBlue, color.Bold).SprintFunc()
+	Yellow = color.New(color.FgYellow).SprintFunc()
+	Red    = color.New(color.FgRed).SprintFunc()
+	Blue   = color.New(color.FgBlue).SprintFunc()
+	Green  = color.New(color.FgGreen).SprintFunc()
+	White  = color.New(color.FgWhite).SprintFunc()
 )
 
 var C CatchLogger
@@ -152,7 +155,8 @@ func (c CatchLogger) InformStr(e string) {
 
 func (c CatchLogger) ErrLogOut(funcName string, e error, m, dir, line string, typeError PrintType) {
 	if e == nil {
-		e = errors.New("no error")
+		e = errors.New("no errors DETECTED")
+		typeError = TypeSuccess
 	}
 	switch typeError {
 	case TypeInfo:
@@ -186,6 +190,17 @@ func (c CatchLogger) ErrLogOut(funcName string, e error, m, dir, line string, ty
 		} else {
 			log.Println(Red("Original error   : "), e.Error())
 		}
+	case TypeSuccess:
+		log.Println(White("Error directory  : "), dir)
+		log.Println(White("Function Name    : "), Green(funcName))
+		log.Printf(`%s at line: %s, message: %s`, White("Error info       : "), Green(line), Green(m))
+
+		if len(e.Error()) > len(dir) {
+			log.Println(White("Original error   :\n"), e.Error())
+		} else {
+			log.Println(White("Original error   : "), e.Error())
+		}
+
 	}
 }
 
