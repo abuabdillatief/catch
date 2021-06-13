@@ -16,7 +16,7 @@ import (
 
 type CatchLogger struct {
 	*log.Logger
-	CatchLogDirectory string
+	Custom map[string]string
 }
 
 type PrintType string
@@ -27,6 +27,7 @@ const (
 	TypeWarn    PrintType = "Warn"
 	TypeInfo    PrintType = "Info"
 	TypeSuccess PrintType = "Success"
+	TypeNeutral PrintType = "Neutral"
 )
 
 var (
@@ -56,8 +57,7 @@ func DirectoryFormater(dir string, printType PrintType) string {
 }
 
 func NewLog() CatchLogger {
-	C.CatchLogDirectory = "./catch.clog.csv"
-	f, err := os.OpenFile(C.CatchLogDirectory, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	f, err := os.OpenFile("./catch.clog.csv", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -69,80 +69,102 @@ func NewLog() CatchLogger {
 	return C
 }
 
-func (c CatchLogger) Error(e error, m string) {
+func Print(values ...interface{}) {
 	var B bytes.Buffer
-	c.Logger = log.New(&B, "", log.Llongfile)
-	c.Output(2, "")
+	clg := log.New(&B, "", log.Llongfile)
+	clg.Output(2, "")
+	inf := strings.Split(fmt.Sprintf("%v", &B), ":")
+
+	pc, _, _, _ := runtime.Caller(1)
+	f := strings.Split(runtime.FuncForPC(pc).Name(), ".")
+
+	log.Println(Blue("Working directory: "), DirectoryFormater(inf[0], TypeError))
+	log.Println(Blue("Function Name    : "), White(f[len(f)-1]))
+	log.Printf(`%s at line: %s`, Blue("Location info    : "), White(inf[1]))
+	for i, key := range values {
+		str := fmt.Sprintf("Argument %d", i)
+		if len(str) < 17 {
+			str += strings.Repeat(" ", 17-len(str))
+		}
+		str += ": "
+		log.Println(White(str), White(key))
+	}
+}
+
+func (c CatchLogger) Error(err error, message string) {
+	var B bytes.Buffer
+	clg := log.New(&B, "", log.Llongfile)
+	clg.Output(2, "")
 	inf := strings.Split(fmt.Sprintf("%v", &B), ":")
 
 	pc, _, _, _ := runtime.Caller(1)
 	f := strings.Split(runtime.FuncForPC(pc).Name(), ".")
 
 	log.Println("__________________")
-	c.ErrLogOut(f[len(f)-1], e, m, DirectoryFormater(inf[0], TypeError), inf[1], TypeError)
+	c.ErrLogOut(f[len(f)-1], err, message, DirectoryFormater(inf[0], TypeError), inf[1], TypeError)
 	log.Println("__________________")
 }
 
-func (c CatchLogger) ErrorStr(e string, m string) {
+func (c CatchLogger) ErrorStr(err string, message string) {
 	var B bytes.Buffer
-	c.Logger = log.New(&B, "", log.Llongfile)
-	c.Output(2, "")
+	clg := log.New(&B, "", log.Llongfile)
+	clg.Output(2, "")
 	inf := strings.Split(fmt.Sprintf("%v", &B), ":")
 
 	pc, _, _, _ := runtime.Caller(1)
 	f := strings.Split(runtime.FuncForPC(pc).Name(), ".")
 
 	log.Println("__________________")
-	c.StrLogOut(f[len(f)-1], e, m, DirectoryFormater(inf[0], TypeError), inf[1], TypeError)
+	c.StrLogOut(f[len(f)-1], err, message, DirectoryFormater(inf[0], TypeError), inf[1], TypeError)
 	log.Println("__________________")
 }
 
-func (c CatchLogger) Warn(e error, m string) {
+func (c CatchLogger) Warn(err error, message string) {
 	var B bytes.Buffer
-	c.Logger = log.New(&B, "", log.Llongfile)
-	c.Output(2, "")
+	clg := log.New(&B, "", log.Llongfile)
+	clg.Output(2, "")
 	inf := strings.Split(fmt.Sprintf("%v", &B), ":")
 
 	pc, _, _, _ := runtime.Caller(1)
 	f := strings.Split(runtime.FuncForPC(pc).Name(), ".")
 
 	log.Println("__________________")
-	c.ErrLogOut(f[len(f)-1], e, m, DirectoryFormater(inf[0], TypeWarn), inf[1], TypeWarn)
+	c.ErrLogOut(f[len(f)-1], err, message, DirectoryFormater(inf[0], TypeWarn), inf[1], TypeWarn)
 	log.Println("__________________")
 }
 
-func (c CatchLogger) WarnStr(e string, m string) {
+func (c CatchLogger) WarnStr(err string, message string) {
 	var B bytes.Buffer
-	c.Logger = log.New(&B, "", log.Llongfile)
-	c.Output(2, "")
+	clg := log.New(&B, "", log.Llongfile)
+	clg.Output(2, "")
 	inf := strings.Split(fmt.Sprintf("%v", &B), ":")
 
 	pc, _, _, _ := runtime.Caller(1)
 	f := strings.Split(runtime.FuncForPC(pc).Name(), ".")
 
 	log.Println("__________________")
-	c.StrLogOut(f[len(f)-1], e, m, DirectoryFormater(inf[0], TypeWarn), inf[1], TypeWarn)
+	c.StrLogOut(f[len(f)-1], err, message, DirectoryFormater(inf[0], TypeWarn), inf[1], TypeWarn)
 	log.Println("__________________")
 }
 
-func (c CatchLogger) Inform(e error) {
+func (c CatchLogger) Inform(err error) {
 	var B bytes.Buffer
-	c.Logger = log.New(&B, "", log.Llongfile)
-	c.Output(2, "")
+	clg := log.New(&B, "", log.Llongfile)
+	clg.Output(2, "")
 	inf := strings.Split(fmt.Sprintf("%v", &B), ":")
 
 	pc, _, _, _ := runtime.Caller(1)
 	f := strings.Split(runtime.FuncForPC(pc).Name(), ".")
 
 	log.Println("__________________")
-	c.ErrLogOut(f[len(f)-1], e, "", DirectoryFormater(inf[0], TypeInfo), inf[1], TypeInfo)
+	c.ErrLogOut(f[len(f)-1], err, "", DirectoryFormater(inf[0], TypeInfo), inf[1], TypeInfo)
 	log.Println("__________________")
 }
 
 func (c CatchLogger) InformStr(e string) {
 	var B bytes.Buffer
-	c.Logger = log.New(&B, "", log.Llongfile)
-	c.Output(2, "")
+	clg := log.New(&B, "", log.Llongfile)
+	clg.Output(2, "")
 	inf := strings.Split(fmt.Sprintf("%v", &B), ":")
 
 	pc, _, _, _ := runtime.Caller(1)
@@ -243,15 +265,15 @@ func (c *CatchLogger) SaveToLogFile(e error) {
 	if e == nil {
 		e = errors.New("no error")
 	}
-	f, err := os.OpenFile(c.CatchLogDirectory, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	f, err := os.OpenFile("./catch.clog.csv", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		panic(err)
 	}
 	defer f.Close()
 
 	var B bytes.Buffer
-	c.Logger = log.New(&B, "", log.Llongfile)
-	c.Output(2, "")
+	clg := log.New(&B, "", log.Llongfile)
+	clg.Output(2, "")
 	dir := strings.Split(fmt.Sprintf("%v", &B), "/")
 	d := dir[len(dir)-1]
 	s := d[:len(d)-3]
@@ -264,23 +286,23 @@ func (c *CatchLogger) SaveToLogFile(e error) {
 }
 
 func (c *CatchLogger) DeleteLogFile() {
-	err := os.Remove(c.CatchLogDirectory)
+	err := os.Remove("./catch.clog.csv")
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
 	}
 }
 
-func (c CatchLogger) CustomLog(privateLog map[string]string, printType PrintType) {
+func (c CatchLogger) CustomLog(printType PrintType) {
 	var B bytes.Buffer
-	c.Logger = log.New(&B, "", log.Llongfile)
-	c.Output(2, "")
+	clg := log.New(&B, "", log.Llongfile)
+	clg.Output(2, "")
 	inf := strings.Split(fmt.Sprintf("%v", &B), ":")
 
 	line := inf[1]
 	dir := inf[0]
 
 	var l string
-	for key := range privateLog {
+	for key := range c.Custom {
 		if len(key) > len(l) {
 			l = key
 		}
@@ -304,7 +326,7 @@ func (c CatchLogger) CustomLog(privateLog map[string]string, printType PrintType
 	strp := strings.Repeat("_", len(l))
 	log.Println(strp)
 	var i int
-	for key, val := range privateLog {
+	for key, val := range c.Custom {
 		d := cd
 		if len(key) != len(cd) {
 			if len(key) > len(cd) {
@@ -348,8 +370,8 @@ func (c CatchLogger) CustomLog(privateLog map[string]string, printType PrintType
 
 func (c CatchLogger) MiddlewareLogger(createLog bool) func(http.Handler) http.Handler {
 	var B bytes.Buffer
-	c.Logger = log.New(&B, "", log.Llongfile)
-	c.Output(2, "")
+	clg := log.New(&B, "", log.Llongfile)
+	clg.Output(2, "")
 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
