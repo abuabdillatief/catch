@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	print "github.com/abuabdillatief/catch/PrintType"
 	"github.com/fatih/color"
 )
 
@@ -18,17 +19,6 @@ type CatchLogger struct {
 	*log.Logger
 	Custom map[string]string
 }
-
-type PrintType string
-
-//====================================================
-const (
-	TypeError   PrintType = "Error"
-	TypeWarn    PrintType = "Warn"
-	TypeInfo    PrintType = "Info"
-	TypeSuccess PrintType = "Success"
-	TypeNeutral PrintType = "Neutral"
-)
 
 var (
 	Yellow = color.New(color.FgYellow).SprintFunc()
@@ -41,16 +31,16 @@ var (
 var C CatchLogger
 
 //====================================================
-func DirectoryFormater(dir string, printType PrintType) string {
+func DirectoryFormater(dir string, printType print.PrintType) string {
 	s := strings.Split(dir, "/")
 	d := s[len(s)-1]
 	s = s[:len(s)-1]
 	switch printType {
-	case TypeError:
+	case print.TypeError:
 		s = append(s, color.New(color.FgRed, color.Bold).Add(color.Underline).SprintFunc()(d))
-	case TypeWarn:
+	case print.TypeWarn:
 		s = append(s, color.New(color.FgYellow, color.Bold).Add(color.Underline).SprintFunc()(d))
-	case TypeInfo:
+	case print.TypeInfo:
 		s = append(s, color.New(color.FgBlue, color.Bold).Add(color.Underline).SprintFunc()(d))
 	}
 	return strings.Join(s, "/")
@@ -69,7 +59,7 @@ func NewLog() CatchLogger {
 	return C
 }
 
-func Print(values ...interface{}) {
+func Print(typePrint print.PrintType, values ...interface{}) {
 	var B bytes.Buffer
 	clg := log.New(&B, "", log.Llongfile)
 	clg.Output(2, "")
@@ -78,16 +68,48 @@ func Print(values ...interface{}) {
 	pc, _, _, _ := runtime.Caller(1)
 	f := strings.Split(runtime.FuncForPC(pc).Name(), ".")
 
-	log.Println(Blue("Working directory: "), DirectoryFormater(inf[0], TypeError))
+	baseWord := "Info "
+	logFunc := func(typePrint print.PrintType) func(key1, key2 interface{}) {
+		switch typePrint {
+		case print.TypeError:
+			baseWord = "Error"
+			return func(key1, key2 interface{}) {
+				log.Println(Red(key1), Red(key2))
+			}
+		case print.TypeWarn:
+			return func(key1, key2 interface{}) {
+				log.Println(Yellow(key1), Yellow(key2))
+			}
+		case print.TypeInfo:
+			return func(key1, key2 interface{}) {
+				log.Println(Blue(key1), Blue(key2))
+			}
+		case print.TypeNeutral:
+			return func(key1, key2 interface{}) {
+				log.Println(White(key1), White(key2))
+			}
+		case print.TypeSuccess:
+			return func(key1, key2 interface{}) {
+				log.Println(Green(key1), Green(key2))
+			}
+		}
+		return func(key1, key2 interface{}) {
+			log.Println(White(key1), White(key2))
+		}
+	}(typePrint)
+
+	log.Println(Blue("Working directory: "), DirectoryFormater(inf[0], typePrint))
 	log.Println(Blue("Function Name    : "), White(f[len(f)-1]))
-	log.Printf(`%s at line: %s`, Blue("Location info    : "), White(inf[1]))
+	log.Printf(`%s at line: %s`, Blue("Location info    : "), Yellow(inf[1]))
+
 	for i, key := range values {
-		str := fmt.Sprintf("Argument %d", i)
+		str := fmt.Sprintf("%s %d", baseWord, i)
 		if len(str) < 17 {
 			str += strings.Repeat(" ", 17-len(str))
 		}
 		str += ": "
-		log.Println(White(str), White(key))
+
+		logFunc(str, key)
 	}
 }
 
@@ -101,7 +123,7 @@ func (c CatchLogger) Error(err error, message string) {
 	f := strings.Split(runtime.FuncForPC(pc).Name(), ".")
 
 	log.Println("__________________")
-	c.ErrLogOut(f[len(f)-1], err, message, DirectoryFormater(inf[0], TypeError), inf[1], TypeError)
+	c.ErrLogOut(f[len(f)-1], err, message, DirectoryFormater(inf[0], print.TypeError), inf[1], print.TypeError)
 	log.Println("__________________")
 }
 
@@ -115,7 +137,7 @@ func (c CatchLogger) ErrorStr(err string, message string) {
 	f := strings.Split(runtime.FuncForPC(pc).Name(), ".")
 
 	log.Println("__________________")
-	c.StrLogOut(f[len(f)-1], err, message, DirectoryFormater(inf[0], TypeError), inf[1], TypeError)
+	c.StrLogOut(f[len(f)-1], err, message, DirectoryFormater(inf[0], print.TypeError), inf[1], print.TypeError)
 	log.Println("__________________")
 }
 
@@ -129,7 +151,7 @@ func (c CatchLogger) Warn(err error, message string) {
 	f := strings.Split(runtime.FuncForPC(pc).Name(), ".")
 
 	log.Println("__________________")
-	c.ErrLogOut(f[len(f)-1], err, message, DirectoryFormater(inf[0], TypeWarn), inf[1], TypeWarn)
+	c.ErrLogOut(f[len(f)-1], err, message, DirectoryFormater(inf[0], print.TypeWarn), inf[1], print.TypeWarn)
 	log.Println("__________________")
 }
 
@@ -143,7 +165,7 @@ func (c CatchLogger) WarnStr(err string, message string) {
 	f := strings.Split(runtime.FuncForPC(pc).Name(), ".")
 
 	log.Println("__________________")
-	c.StrLogOut(f[len(f)-1], err, message, DirectoryFormater(inf[0], TypeWarn), inf[1], TypeWarn)
+	c.StrLogOut(f[len(f)-1], err, message, DirectoryFormater(inf[0], print.TypeWarn), inf[1], print.TypeWarn)
 	log.Println("__________________")
 }
 
@@ -157,7 +179,7 @@ func (c CatchLogger) Inform(err error) {
 	f := strings.Split(runtime.FuncForPC(pc).Name(), ".")
 
 	log.Println("__________________")
-	c.ErrLogOut(f[len(f)-1], err, "", DirectoryFormater(inf[0], TypeInfo), inf[1], TypeInfo)
+	c.ErrLogOut(f[len(f)-1], err, "", DirectoryFormater(inf[0], print.TypeInfo), inf[1], print.TypeInfo)
 	log.Println("__________________")
 }
 
@@ -171,17 +193,17 @@ func (c CatchLogger) InformStr(e string) {
 	f := strings.Split(runtime.FuncForPC(pc).Name(), ".")
 
 	log.Println("__________________")
-	c.StrLogOut(f[len(f)-1], e, "", DirectoryFormater(inf[0], TypeInfo), inf[1], TypeInfo)
+	c.StrLogOut(f[len(f)-1], e, "", DirectoryFormater(inf[0], print.TypeInfo), inf[1], print.TypeInfo)
 	log.Println("__________________")
 }
 
-func (c CatchLogger) ErrLogOut(funcName string, e error, m, dir, line string, typeError PrintType) {
+func (c CatchLogger) ErrLogOut(funcName string, e error, m, dir, line string, typeError print.PrintType) {
 	if e == nil {
 		e = errors.New("no errors DETECTED")
-		typeError = TypeSuccess
+		typeError = print.TypeSuccess
 	}
 	switch typeError {
-	case TypeInfo:
+	case print.TypeInfo:
 		log.Println(Blue("Working directory: "), dir)
 		log.Println(Blue("Function Name    : "), Blue(funcName))
 
@@ -192,7 +214,7 @@ func (c CatchLogger) ErrLogOut(funcName string, e error, m, dir, line string, ty
 		} else {
 			log.Println(Blue("Original error   : "), e.Error())
 		}
-	case TypeWarn:
+	case print.TypeWarn:
 		log.Println(Yellow("Error directory  : "), dir)
 		log.Println(Yellow("Function Name    : "), Yellow(funcName))
 		log.Printf(`%s at line: %s, message: %s`, Yellow("Error info       : "), Yellow(line), Yellow(m))
@@ -202,7 +224,7 @@ func (c CatchLogger) ErrLogOut(funcName string, e error, m, dir, line string, ty
 		} else {
 			log.Println(Yellow("Original error   : "), e.Error())
 		}
-	case TypeError:
+	case print.TypeError:
 		log.Println(Red("Error directory  : "), dir)
 		log.Println(Red("Function Name    : "), Red(funcName))
 		log.Printf(`%s at line: %s, message: %s`, Red("Error info       : "), Yellow(line), Yellow(m))
@@ -212,7 +234,7 @@ func (c CatchLogger) ErrLogOut(funcName string, e error, m, dir, line string, ty
 		} else {
 			log.Println(Red("Original error   : "), e.Error())
 		}
-	case TypeSuccess:
+	case print.TypeSuccess:
 		log.Println(White("Error directory  : "), dir)
 		log.Println(White("Function Name    : "), Green(funcName))
 		log.Printf(`%s at line: %s, message: %s`, White("Error info       : "), Green(line), Green(m))
@@ -226,9 +248,9 @@ func (c CatchLogger) ErrLogOut(funcName string, e error, m, dir, line string, ty
 	}
 }
 
-func (c CatchLogger) StrLogOut(funcName, e, m, dir, line string, typeError PrintType) {
+func (c CatchLogger) StrLogOut(funcName, e, m, dir, line string, typeError print.PrintType) {
 	switch typeError {
-	case TypeInfo:
+	case print.TypeInfo:
 		log.Println(Blue("Working directory: "), dir)
 		log.Println(Blue("Function Name    : "), funcName)
 		log.Printf(`%s at line: %s`, Blue("Error info       : "), Yellow(line))
@@ -238,7 +260,7 @@ func (c CatchLogger) StrLogOut(funcName, e, m, dir, line string, typeError Print
 		} else {
 			log.Println(Blue("Original error   : "), e)
 		}
-	case TypeWarn:
+	case print.TypeWarn:
 		log.Println(Yellow("Error directory  : "), dir)
 		log.Println(Yellow("Function Name    : "), funcName)
 		log.Printf(`%s at line: %s, message: %s`, Yellow("Error info       : "), Yellow(line), Yellow(m))
@@ -248,7 +270,7 @@ func (c CatchLogger) StrLogOut(funcName, e, m, dir, line string, typeError Print
 		} else {
 			log.Println(Yellow("Original error   : "), e)
 		}
-	case TypeError:
+	case print.TypeError:
 		log.Println(Red("Error directory  : "), dir)
 		log.Println(Red("Function Name    : "), funcName)
 		log.Printf(`%s at line: %s, message: %s`, Red("Error info       : "), Yellow(line), Yellow(m))
@@ -292,7 +314,7 @@ func (c *CatchLogger) DeleteLogFile() {
 	}
 }
 
-func (c CatchLogger) CustomLog(printType PrintType) {
+func (c CatchLogger) CustomLog(printType print.PrintType) {
 	var B bytes.Buffer
 	clg := log.New(&B, "", log.Llongfile)
 	clg.Output(2, "")
@@ -339,26 +361,26 @@ func (c CatchLogger) CustomLog(printType PrintType) {
 		d += ":  "
 		key += ":  "
 		switch printType {
-		case TypeError:
+		case print.TypeError:
 			if i == 0 {
 
-				log.Println(Red(d), DirectoryFormater(dir, TypeError))
+				log.Println(Red(d), DirectoryFormater(dir, print.TypeError))
 				log.Println(Red(ei), fmt.Sprintf(`at line: %s`, Yellow(line)))
 				i++
 			}
 			log.Println(Red(key), val)
-		case TypeWarn:
+		case print.TypeWarn:
 			if i == 0 {
 
-				log.Println(Yellow(d), DirectoryFormater(dir, TypeWarn))
+				log.Println(Yellow(d), DirectoryFormater(dir, print.TypeWarn))
 				log.Println(Yellow(ei), fmt.Sprintf(`at line: %s`, Yellow(line)))
 				i++
 			}
 			log.Println(Yellow(key), val)
-		case TypeInfo:
+		case print.TypeInfo:
 			if i == 0 {
 
-				log.Println(Blue(d), DirectoryFormater(dir, TypeInfo))
+				log.Println(Blue(d), DirectoryFormater(dir, print.TypeInfo))
 				log.Println(Blue(ei), fmt.Sprintf(`at line: %s`, Yellow(line)))
 				i++
 			}
