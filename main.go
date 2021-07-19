@@ -7,17 +7,24 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"reflect"
 	"runtime"
 	"strings"
 	"time"
 
 	print "github.com/abuabdillatief/catch/PrintType"
 	"github.com/fatih/color"
+	"github.com/fatih/structs"
 )
 
 type CatchLogger struct {
 	*log.Logger
-	Custom map[string]string
+
+	//(catch.CatchLogger).Custom is used to store temporary map
+	// to log in your terminal.
+	// Any map inserted in this key will be deleted
+	// right after each print
+	Custom map[string]interface{}
 }
 
 var (
@@ -42,12 +49,19 @@ func DirectoryFormater(dir string, printType print.PrintType) string {
 		s = append(s, color.New(color.FgYellow, color.Bold).Add(color.Underline).SprintFunc()(d))
 	case print.TypeInfo:
 		s = append(s, color.New(color.FgBlue, color.Bold).Add(color.Underline).SprintFunc()(d))
+	case print.TypeNeutral:
+		s = append(s, color.New(color.FgWhite, color.Bold).Add(color.Underline).SprintFunc()(d))
+	case print.TypeSuccess:
+		s = append(s, color.New(color.FgGreen, color.Bold).Add(color.Underline).SprintFunc()(d))
 	}
+
 	return strings.Join(s, "/")
 }
 
+// NewLog will create a new CatchLogger instance
+// which can then be used to save logs to a .csv file
 func NewLog() CatchLogger {
-	f, err := os.OpenFile("./catch.clog.csv", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	f, err := os.OpenFile("./catch.log.csv", os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -59,6 +73,7 @@ func NewLog() CatchLogger {
 	return C
 }
 
+// Print will print any value inserted with specified printing style
 func Print(typePrint print.PrintType, values ...interface{}) {
 	var B bytes.Buffer
 	clg := log.New(&B, "", log.Llongfile)
@@ -68,27 +83,49 @@ func Print(typePrint print.PrintType, values ...interface{}) {
 	pc, _, _, _ := runtime.Caller(1)
 	f := strings.Split(runtime.FuncForPC(pc).Name(), ".")
 
-	baseWord := "Info "
+	var wd, fn, line string
+
+	baseWord := "Info at index"
 	logFunc := func(typePrint print.PrintType) func(key1, key2 interface{}) {
 		switch typePrint {
 		case print.TypeError:
-			baseWord = "Error"
+			wd = Red("Working directory: ")
+			fn = Red("Function Name    : ")
+			line = Red("Location info    : ")
+
+			baseWord = "Error at index"
 			return func(key1, key2 interface{}) {
 				log.Println(Red(key1), Red(key2))
 			}
 		case print.TypeWarn:
+			wd = Yellow("Working directory: ")
+			fn = Yellow("Function Name    : ")
+			line = Yellow("Location info    : ")
+
 			return func(key1, key2 interface{}) {
 				log.Println(Yellow(key1), Yellow(key2))
 			}
 		case print.TypeInfo:
+			wd = Blue("Working directory: ")
+			fn = Blue("Function Name    : ")
+			line = Blue("Location info    : ")
+
 			return func(key1, key2 interface{}) {
 				log.Println(Blue(key1), Blue(key2))
 			}
 		case print.TypeNeutral:
+			wd = White("Working directory: ")
+			fn = White("Function Name    : ")
+			line = White("Location info    : ")
+
 			return func(key1, key2 interface{}) {
 				log.Println(White(key1), White(key2))
 			}
 		case print.TypeSuccess:
+			wd = Green("Working directory: ")
+			fn = Green("Function Name    : ")
+			line = Green("Location info    : ")
+
 			return func(key1, key2 interface{}) {
 				log.Println(Green(key1), Green(key2))
 			}
@@ -98,9 +135,9 @@ func Print(typePrint print.PrintType, values ...interface{}) {
 		}
 	}(typePrint)
 
-	log.Println(Blue("Working directory: "), DirectoryFormater(inf[0], typePrint))
-	log.Println(Blue("Function Name    : "), White(f[len(f)-1]))
-	log.Printf(`%s at line: %s`, Blue("Location info    : "), Yellow(inf[1]))
+	log.Println(wd, DirectoryFormater(inf[0], typePrint))
+	log.Println(fn, White(f[len(f)-1]))
+	log.Printf(`%s at line: %s`, line, Yellow(inf[1]))
 
 	for i, key := range values {
 		str := fmt.Sprintf("%s %d", baseWord, i)
@@ -113,181 +150,167 @@ func Print(typePrint print.PrintType, values ...interface{}) {
 	}
 }
 
-func (c CatchLogger) Error(err error, message string) {
-	var B bytes.Buffer
-	clg := log.New(&B, "", log.Llongfile)
-	clg.Output(2, "")
-	inf := strings.Split(fmt.Sprintf("%v", &B), ":")
-
-	pc, _, _, _ := runtime.Caller(1)
-	f := strings.Split(runtime.FuncForPC(pc).Name(), ".")
-
-	log.Println("__________________")
-	c.ErrLogOut(f[len(f)-1], err, message, DirectoryFormater(inf[0], print.TypeError), inf[1], print.TypeError)
-	log.Println("__________________")
-}
-
-func (c CatchLogger) ErrorStr(err string, message string) {
-	var B bytes.Buffer
-	clg := log.New(&B, "", log.Llongfile)
-	clg.Output(2, "")
-	inf := strings.Split(fmt.Sprintf("%v", &B), ":")
-
-	pc, _, _, _ := runtime.Caller(1)
-	f := strings.Split(runtime.FuncForPC(pc).Name(), ".")
-
-	log.Println("__________________")
-	c.StrLogOut(f[len(f)-1], err, message, DirectoryFormater(inf[0], print.TypeError), inf[1], print.TypeError)
-	log.Println("__________________")
-}
-
-func (c CatchLogger) Warn(err error, message string) {
-	var B bytes.Buffer
-	clg := log.New(&B, "", log.Llongfile)
-	clg.Output(2, "")
-	inf := strings.Split(fmt.Sprintf("%v", &B), ":")
-
-	pc, _, _, _ := runtime.Caller(1)
-	f := strings.Split(runtime.FuncForPC(pc).Name(), ".")
-
-	log.Println("__________________")
-	c.ErrLogOut(f[len(f)-1], err, message, DirectoryFormater(inf[0], print.TypeWarn), inf[1], print.TypeWarn)
-	log.Println("__________________")
-}
-
-func (c CatchLogger) WarnStr(err string, message string) {
-	var B bytes.Buffer
-	clg := log.New(&B, "", log.Llongfile)
-	clg.Output(2, "")
-	inf := strings.Split(fmt.Sprintf("%v", &B), ":")
-
-	pc, _, _, _ := runtime.Caller(1)
-	f := strings.Split(runtime.FuncForPC(pc).Name(), ".")
-
-	log.Println("__________________")
-	c.StrLogOut(f[len(f)-1], err, message, DirectoryFormater(inf[0], print.TypeWarn), inf[1], print.TypeWarn)
-	log.Println("__________________")
-}
-
-func (c CatchLogger) Inform(err error) {
-	var B bytes.Buffer
-	clg := log.New(&B, "", log.Llongfile)
-	clg.Output(2, "")
-	inf := strings.Split(fmt.Sprintf("%v", &B), ":")
-
-	pc, _, _, _ := runtime.Caller(1)
-	f := strings.Split(runtime.FuncForPC(pc).Name(), ".")
-
-	log.Println("__________________")
-	c.ErrLogOut(f[len(f)-1], err, "", DirectoryFormater(inf[0], print.TypeInfo), inf[1], print.TypeInfo)
-	log.Println("__________________")
-}
-
-func (c CatchLogger) InformStr(e string) {
-	var B bytes.Buffer
-	clg := log.New(&B, "", log.Llongfile)
-	clg.Output(2, "")
-	inf := strings.Split(fmt.Sprintf("%v", &B), ":")
-
-	pc, _, _, _ := runtime.Caller(1)
-	f := strings.Split(runtime.FuncForPC(pc).Name(), ".")
-
-	log.Println("__________________")
-	c.StrLogOut(f[len(f)-1], e, "", DirectoryFormater(inf[0], print.TypeInfo), inf[1], print.TypeInfo)
-	log.Println("__________________")
-}
-
-func (c CatchLogger) ErrLogOut(funcName string, e error, m, dir, line string, typeError print.PrintType) {
-	if e == nil {
-		e = errors.New("no errors DETECTED")
-		typeError = print.TypeSuccess
+// PrintStruct will print each structs keys anf values
+// with specific color type
+func PrintstructWithType(printType print.PrintType, s interface{}) {
+	if !structs.IsStruct(s) {
+		Print(print.TypeError, "no struct")
+		return
 	}
-	switch typeError {
-	case print.TypeInfo:
-		log.Println(Blue("Working directory: "), dir)
-		log.Println(Blue("Function Name    : "), Blue(funcName))
 
-		log.Printf(`%s at line: %s`, Blue("Location info    : "), Yellow(line))
-
-		if len(e.Error()) > len(dir) {
-			log.Println(Blue("Original error   :\n"), e.Error())
-		} else {
-			log.Println(Blue("Original error   : "), e.Error())
-		}
-	case print.TypeWarn:
-		log.Println(Yellow("Error directory  : "), dir)
-		log.Println(Yellow("Function Name    : "), Yellow(funcName))
-		log.Printf(`%s at line: %s, message: %s`, Yellow("Error info       : "), Yellow(line), Yellow(m))
-
-		if len(e.Error()) > len(dir) {
-			log.Println(Yellow("Original error   :\n"), e.Error())
-		} else {
-			log.Println(Yellow("Original error   : "), e.Error())
-		}
-	case print.TypeError:
-		log.Println(Red("Error directory  : "), dir)
-		log.Println(Red("Function Name    : "), Red(funcName))
-		log.Printf(`%s at line: %s, message: %s`, Red("Error info       : "), Yellow(line), Yellow(m))
-
-		if len(e.Error()) > len(dir) {
-			log.Println(Red("Original error   :\n"), e.Error())
-		} else {
-			log.Println(Red("Original error   : "), e.Error())
-		}
-	case print.TypeSuccess:
-		log.Println(White("Error directory  : "), dir)
-		log.Println(White("Function Name    : "), Green(funcName))
-		log.Printf(`%s at line: %s, message: %s`, White("Error info       : "), Green(line), Green(m))
-
-		if len(e.Error()) > len(dir) {
-			log.Println(White("Original error   :\n"), e.Error())
-		} else {
-			log.Println(White("Original error   : "), e.Error())
-		}
-
+	t := reflect.TypeOf(s)
+	m := make(map[string]interface{})
+	for i := 0; i < t.NumField(); i++ {
+		m[t.Field(i).Name] = reflect.ValueOf(s).Field(i).Interface()
 	}
+
+	var B bytes.Buffer
+	clg := log.New(&B, "", log.Llongfile)
+	clg.Output(2, "")
+	inf := strings.Split(fmt.Sprintf("%v", &B), ":")
+	MapPrint(&printType, m, inf)
 }
 
-func (c CatchLogger) StrLogOut(funcName, e, m, dir, line string, typeError print.PrintType) {
-	switch typeError {
-	case print.TypeInfo:
-		log.Println(Blue("Working directory: "), dir)
-		log.Println(Blue("Function Name    : "), funcName)
-		log.Printf(`%s at line: %s`, Blue("Error info       : "), Yellow(line))
+// PrintStruct will print each structs keys anf values
+func Printstruct(s interface{}) {
+	if !structs.IsStruct(s) {
+		Print(print.TypeError, "no struct")
+		return
+	}
 
-		if len(e) > len(dir) {
-			log.Println(Blue("Original error   :\n"), e)
-		} else {
-			log.Println(Blue("Original error   : "), e)
-		}
-	case print.TypeWarn:
-		log.Println(Yellow("Error directory  : "), dir)
-		log.Println(Yellow("Function Name    : "), funcName)
-		log.Printf(`%s at line: %s, message: %s`, Yellow("Error info       : "), Yellow(line), Yellow(m))
+	t := reflect.TypeOf(s)
+	m := make(map[string]interface{})
+	for i := 0; i < t.NumField(); i++ {
+		m[t.Field(i).Name] = reflect.ValueOf(s).Field(i).Interface()
+	}
+	var B bytes.Buffer
+	clg := log.New(&B, "", log.Llongfile)
+	clg.Output(2, "")
+	inf := strings.Split(fmt.Sprintf("%v", &B), ":")
+	MapPrint(nil, m, inf)
+}
 
-		if len(e) > len(dir) {
-			log.Println(Yellow("Original error   :\n"), e)
-		} else {
-			log.Println(Yellow("Original error   : "), e)
-		}
-	case print.TypeError:
-		log.Println(Red("Error directory  : "), dir)
-		log.Println(Red("Function Name    : "), funcName)
-		log.Printf(`%s at line: %s, message: %s`, Red("Error info       : "), Yellow(line), Yellow(m))
+// MapPrint will print keys and val inside a map
+func MapPrint(printType *print.PrintType, m map[string]interface{}, inf []string) {
 
-		if len(e) > len(dir) {
-			log.Println(Red("Original error   :\n"), e)
-		} else {
-			log.Println(Red("Original error   : "), e)
+	line := inf[1]
+	dir := inf[0]
+
+	var l string
+	for key := range m {
+		if len(key) > len(l) {
+			l = key
 		}
 	}
+
+	cd := "Current directory"
+	ei := "Line info"
+	if len(l) > len(cd) {
+		cd += strings.Repeat(" ", len(l)-len(cd))
+	} else {
+		l += strings.Repeat(" ", len(cd)-len(l))
+	}
+
+	if len(cd) > len(ei) {
+		ei += strings.Repeat(" ", len(cd)-len(ei))
+	}
+	if len(l) > len(ei) {
+		ei += strings.Repeat(" ", len(l)-len(ei))
+	}
+	ei += ":  "
+	strp := strings.Repeat("_", len(l))
+	log.Println(strp)
+	var i int
+	var logFunc func(key1, key2, key3 interface{}, i int)
+
+	if printType == nil {
+		logFunc = func(key1, key2, key3 interface{}, i int) {
+			if i == 0 {
+				log.Println(White(key3), DirectoryFormater(dir, print.TypeWarn))
+				log.Println(White(ei), fmt.Sprintf(`at line: %s`, Yellow(line)))
+			}
+			log.Println(White(key1), key2)
+		}
+	} else {
+		logFunc = func(typePrint print.PrintType) func(key1, key2, key3 interface{}, i int) {
+			switch typePrint {
+			case print.TypeError:
+				return func(key1, key2, key3 interface{}, i int) {
+					if i == 0 {
+						log.Println(Red(key3), DirectoryFormater(dir, print.TypeError))
+						log.Println(Red(ei), fmt.Sprintf(`at line: %s`, Yellow(line)))
+					}
+					log.Println(Red(key1), key2)
+				}
+			case print.TypeWarn:
+				return func(key1, key2, key3 interface{}, i int) {
+					if i == 0 {
+						log.Println(Yellow(key3), DirectoryFormater(dir, print.TypeWarn))
+						log.Println(Yellow(ei), fmt.Sprintf(`at line: %s`, Yellow(line)))
+					}
+					log.Println(Yellow(key1), key2)
+				}
+			case print.TypeInfo:
+				return func(key1, key2, key3 interface{}, i int) {
+					if i == 0 {
+						log.Println(Blue(key3), DirectoryFormater(dir, print.TypeInfo))
+						log.Println(Blue(ei), fmt.Sprintf(`at line: %s`, Yellow(line)))
+					}
+					log.Println(Blue(key1), key2)
+				}
+			case print.TypeNeutral:
+				return func(key1, key2, key3 interface{}, i int) {
+					if i == 0 {
+						log.Println(White(key3), DirectoryFormater(dir, print.TypeNeutral))
+						log.Println(White(ei), fmt.Sprintf(`at line: %s`, Yellow(line)))
+					}
+					log.Println(White(key1), key2)
+				}
+			case print.TypeSuccess:
+				return func(key1, key2, key3 interface{}, i int) {
+					if i == 0 {
+						log.Println(Green(key3), DirectoryFormater(dir, print.TypeSuccess))
+						log.Println(Green(ei), fmt.Sprintf(`at line: %s`, Yellow(line)))
+					}
+					log.Println(Green(key1), key2)
+				}
+			default:
+				return func(key1, key2, key3 interface{}, i int) {
+					if i == 0 {
+						log.Println(Blue(key3), DirectoryFormater(dir, print.TypeInfo))
+						log.Println(Blue(ei), fmt.Sprintf(`at line: %s`, Yellow(line)))
+					}
+					log.Println(White(key1), key2)
+				}
+			}
+		}(*printType)
+	}
+
+	for key, val := range m {
+		d := cd
+		if len(key) != len(cd) {
+			if len(key) > len(cd) {
+				d += strings.Repeat(" ", len(key)-len(cd))
+
+			} else if len(key) < len(cd) {
+				key += strings.Repeat(" ", len(cd)-len(key))
+			}
+		}
+		d += ":  "
+		key += ":  "
+		logFunc(key, val, d, i)
+		i++
+	}
+	log.Printf("%s\n", strp)
 }
 
+// SaveToLogfile will save your error message
+// to your catch.log.csv file
 func (c *CatchLogger) SaveToLogFile(e error) {
 	if e == nil {
 		e = errors.New("no error")
 	}
-	f, err := os.OpenFile("./catch.clog.csv", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	f, err := os.OpenFile("./catch.log.csv", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		panic(err)
 	}
@@ -307,89 +330,46 @@ func (c *CatchLogger) SaveToLogFile(e error) {
 	}
 }
 
+// DeleteLogFile will delete your catch.log.csv file
 func (c *CatchLogger) DeleteLogFile() {
-	err := os.Remove("./catch.clog.csv")
+	err := os.Remove("./catch.log.csv")
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
 	}
 }
 
+// CustomLog will log every key and value inside catch.Custom
+// after each custom logging, map insde catch.Custom will be deleted
+/*
+	c := catch.NewLog()
+
+	a := map[string]string{
+	"test":"ok",
+	}
+
+	c.Customlog(print.TypeInfo)
+	===================
+	2021/07/12 11:54:57 Current directory:  ~/main.go
+	2021/07/12 11:54:57 Error info       :   at line: 16
+	2021/07/12 11:54:57 tes              :   tes a
+	2021/07/12 11:54:57 foo              :   bar
+*/
 func (c CatchLogger) CustomLog(printType print.PrintType) {
+	if len(c.Custom) == 0 {
+		log.Println("no maps inserted in catch.Custom")
+		return
+	}
 	var B bytes.Buffer
 	clg := log.New(&B, "", log.Llongfile)
 	clg.Output(2, "")
 	inf := strings.Split(fmt.Sprintf("%v", &B), ":")
-
-	line := inf[1]
-	dir := inf[0]
-
-	var l string
+	MapPrint(&printType, c.Custom, inf)
 	for key := range c.Custom {
-		if len(key) > len(l) {
-			l = key
-		}
+		delete(c.Custom, key)
 	}
-
-	cd := "Current directory"
-	ei := "Error info"
-	if len(l) > len(cd) {
-		cd += strings.Repeat(" ", len(l)-len(cd))
-	} else {
-		l += strings.Repeat(" ", len(cd)-len(l))
-	}
-
-	if len(cd) > len(ei) {
-		ei += strings.Repeat(" ", len(cd)-len(ei))
-	}
-	if len(l) > len(ei) {
-		ei += strings.Repeat(" ", len(l)-len(ei))
-	}
-	ei += ":  "
-	strp := strings.Repeat("_", len(l))
-	log.Println(strp)
-	var i int
-	for key, val := range c.Custom {
-		d := cd
-		if len(key) != len(cd) {
-			if len(key) > len(cd) {
-				d += strings.Repeat(" ", len(key)-len(cd))
-
-			} else if len(key) < len(cd) {
-				key += strings.Repeat(" ", len(cd)-len(key))
-			}
-		}
-		d += ":  "
-		key += ":  "
-		switch printType {
-		case print.TypeError:
-			if i == 0 {
-
-				log.Println(Red(d), DirectoryFormater(dir, print.TypeError))
-				log.Println(Red(ei), fmt.Sprintf(`at line: %s`, Yellow(line)))
-				i++
-			}
-			log.Println(Red(key), val)
-		case print.TypeWarn:
-			if i == 0 {
-
-				log.Println(Yellow(d), DirectoryFormater(dir, print.TypeWarn))
-				log.Println(Yellow(ei), fmt.Sprintf(`at line: %s`, Yellow(line)))
-				i++
-			}
-			log.Println(Yellow(key), val)
-		case print.TypeInfo:
-			if i == 0 {
-
-				log.Println(Blue(d), DirectoryFormater(dir, print.TypeInfo))
-				log.Println(Blue(ei), fmt.Sprintf(`at line: %s`, Yellow(line)))
-				i++
-			}
-			log.Println(Blue(key), val)
-		}
-	}
-	log.Printf("%s\n", strp)
 }
 
+// MiddlewareLogger will log all keys and values inside your HTTP header
 func (c CatchLogger) MiddlewareLogger(createLog bool) func(http.Handler) http.Handler {
 	var B bytes.Buffer
 	clg := log.New(&B, "", log.Llongfile)
@@ -423,6 +403,7 @@ func (c CatchLogger) MiddlewareLogger(createLog bool) func(http.Handler) http.Ha
 	}
 }
 
+//MiddelwareLoggerWithKeys will log specified keys inside your HTTP header
 func (c CatchLogger) MiddlewareLoggerWithKeys(createLog bool, keys ...string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
