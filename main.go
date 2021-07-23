@@ -55,7 +55,7 @@ func DirectoryFormater(dir string, printType print.PrintType) string {
 		s = append(s, color.New(color.FgGreen, color.Bold).Add(color.Underline).SprintFunc()(d))
 	}
 
-	return strings.Join(s, "/")
+	return strings.Split(strings.Join(s, "/"), "src/")[1]
 }
 
 // NewLog will create a new CatchLogger instance
@@ -152,7 +152,7 @@ func Print(typePrint print.PrintType, values ...interface{}) {
 
 // PrintStruct will print each structs keys anf values
 // with specific color type
-func PrintstructWithType(printType print.PrintType, s interface{}) {
+func PrintStructWithType(printType print.PrintType, s interface{}) {
 	if !structs.IsStruct(s) {
 		Print(print.TypeError, "no struct")
 		return
@@ -172,7 +172,7 @@ func PrintstructWithType(printType print.PrintType, s interface{}) {
 }
 
 // PrintStruct will print each structs keys anf values
-func Printstruct(s interface{}) {
+func PrintStruct(s interface{}) {
 	if !structs.IsStruct(s) {
 		Print(print.TypeError, "no struct")
 		return
