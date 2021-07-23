@@ -150,6 +150,102 @@ func Print(typePrint print.PrintType, values ...interface{}) {
 	}
 }
 
+// PrintArray will print any array of string
+func PrintArrayString(arr []string) {
+	var B bytes.Buffer
+	clg := log.New(&B, "", log.Llongfile)
+	clg.Output(2, "")
+	inf := strings.Split(fmt.Sprintf("%v", &B), ":")
+
+	pc, _, _, _ := runtime.Caller(1)
+	f := strings.Split(runtime.FuncForPC(pc).Name(), ".")
+
+	var wd, fn, line string
+
+	baseWord := "Index"
+	wd = White("Working directory: ")
+	fn = White("Function Name    : ")
+	line = White("Location info    : ")
+
+	log.Println(wd, DirectoryFormater(inf[0], print.TypeNeutral))
+	log.Println(fn, White(f[len(f)-1]))
+	log.Printf(`%s at line: %s`, line, Yellow(inf[1]))
+
+	for i, key := range arr {
+		str := fmt.Sprintf("%s %d", baseWord, i)
+		if len(str) < 17 {
+			str += strings.Repeat(" ", 17-len(str))
+		}
+		str += ": "
+
+		log.Println(White(str), White(key))
+	}
+}
+
+// PrintArrayInt will print any array of string
+func PrintArrayInt(arr []int) {
+	var B bytes.Buffer
+	clg := log.New(&B, "", log.Llongfile)
+	clg.Output(2, "")
+	inf := strings.Split(fmt.Sprintf("%v", &B), ":")
+
+	pc, _, _, _ := runtime.Caller(1)
+	f := strings.Split(runtime.FuncForPC(pc).Name(), ".")
+
+	var wd, fn, line string
+
+	baseWord := "Index"
+	wd = White("Working directory: ")
+	fn = White("Function Name    : ")
+	line = White("Location info    : ")
+
+	log.Println(wd, DirectoryFormater(inf[0], print.TypeNeutral))
+	log.Println(fn, White(f[len(f)-1]))
+	log.Printf(`%s at line: %s`, line, Yellow(inf[1]))
+
+	for i, key := range arr {
+		str := fmt.Sprintf("%s %d", baseWord, i)
+		if len(str) < 17 {
+			str += strings.Repeat(" ", 17-len(str))
+		}
+		str += ": "
+
+		log.Println(White(str), White(key))
+	}
+}
+
+// PrintArrayFloat will print any array of string
+func PrintArrayFloat(arr []float64) {
+	var B bytes.Buffer
+	clg := log.New(&B, "", log.Llongfile)
+	clg.Output(2, "")
+	inf := strings.Split(fmt.Sprintf("%v", &B), ":")
+
+	pc, _, _, _ := runtime.Caller(1)
+	f := strings.Split(runtime.FuncForPC(pc).Name(), ".")
+
+	var wd, fn, line string
+
+	baseWord := "Index"
+	wd = White("Working directory: ")
+	fn = White("Function Name    : ")
+	line = White("Location info    : ")
+
+	log.Println(wd, DirectoryFormater(inf[0], print.TypeNeutral))
+	log.Println(fn, White(f[len(f)-1]))
+	log.Printf(`%s at line: %s`, line, Yellow(inf[1]))
+
+	for i, key := range arr {
+		str := fmt.Sprintf("%s %d", baseWord, i)
+		if len(str) < 17 {
+			str += strings.Repeat(" ", 17-len(str))
+		}
+		str += ": "
+
+		log.Println(White(str), White(key))
+	}
+}
+
 // PrintStruct will print each structs keys anf values
 // with specific color type
 func PrintStructWithType(printType print.PrintType, s interface{}) {
