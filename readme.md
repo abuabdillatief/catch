@@ -4,7 +4,7 @@ __*catch*__ is a simple logging package which helps you read errors more easily 
 
 # Install:
 
-    go get github.com/abuabdillatief/catch
+    go get github.com/abuabdillatief/catch@latest
 
 # Examples:
 
