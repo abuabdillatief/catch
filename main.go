@@ -246,20 +246,22 @@ func PrintArrayFloat(arr []float64) {
 	}
 }
 
-// PrintStruct will print each structs keys anf values
+// PrintStruct will print each structs keys and values
 // with specific color type
 func PrintStructWithType(printType print.PrintType, s interface{}) {
 	if !structs.IsStruct(s) {
 		Print(print.TypeError, "no struct")
 		return
 	}
-
-	t := reflect.TypeOf(s)
+	final := reflect.Indirect(reflect.ValueOf(s)).Interface()
+	t := reflect.TypeOf(final)
 	m := make(map[string]interface{})
 	for i := 0; i < t.NumField(); i++ {
-		m[t.Field(i).Name] = reflect.ValueOf(s).Field(i).Interface()
+		str := fmt.Sprintf("%c", []byte{t.Field(i).Name[0]})
+		if strings.ToUpper(str) == str {
+			m[t.Field(i).Name] = reflect.ValueOf(final).Field(i).Interface()
+		}
 	}
-
 	var B bytes.Buffer
 	clg := log.New(&B, "", log.Llongfile)
 	clg.Output(2, "")
@@ -267,17 +269,20 @@ func PrintStructWithType(printType print.PrintType, s interface{}) {
 	MapPrint(&printType, m, inf)
 }
 
-// PrintStruct will print each structs keys anf values
+// PrintStruct will print each structs keys and values
 func PrintStruct(s interface{}) {
 	if !structs.IsStruct(s) {
 		Print(print.TypeError, "no struct")
 		return
 	}
-
-	t := reflect.TypeOf(s)
+	final := reflect.Indirect(reflect.ValueOf(s)).Interface()
+	t := reflect.TypeOf(final)
 	m := make(map[string]interface{})
 	for i := 0; i < t.NumField(); i++ {
-		m[t.Field(i).Name] = reflect.ValueOf(s).Field(i).Interface()
+		str := fmt.Sprintf("%c", []byte{t.Field(i).Name[0]})
+		if strings.ToUpper(str) == str {
+			m[t.Field(i).Name] = reflect.ValueOf(final).Field(i).Interface()
+		}
 	}
 	var B bytes.Buffer
 	clg := log.New(&B, "", log.Llongfile)
