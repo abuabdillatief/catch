@@ -54,8 +54,10 @@ func DirectoryFormater(dir string, printType print.PrintType) string {
 	case print.TypeSuccess:
 		s = append(s, color.New(color.FgGreen, color.Bold).Add(color.Underline).SprintFunc()(d))
 	}
-
-	return strings.Split(strings.Join(s, "/"), "src/")[1]
+	if  len(strings.Split(strings.Join(s, "/"), "src/")) > 0 {
+		return strings.Split(strings.Join(s, "/"), "src/")[1]
+	}
+	return strings.Join(s, "/")
 }
 
 // NewLog will create a new CatchLogger instance
