@@ -41,7 +41,9 @@ var C CatchLogger
 func DirectoryFormater(dir string, printType print.PrintType) string {
 	s := strings.Split(dir, "/")
 	d := s[len(s)-1]
-	s = s[:len(s)-1]
+	if len(s) == 1 {
+		s = []string{}
+	}
 	switch printType {
 	case print.TypeError:
 		s = append(s, color.New(color.FgRed, color.Bold).Add(color.Underline).SprintFunc()(d))
