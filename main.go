@@ -57,7 +57,12 @@ func DirectoryFormater(dir string, printType print.PrintType) string {
 		s = append(s, color.New(color.FgGreen, color.Bold).Add(color.Underline).SprintFunc()(d))
 	}
 	if  len(strings.Split(strings.Join(s, "/"), "src/")) > 0 {
-		return strings.Split(strings.Join(s, "/"), "src/")[1]
+		str := strings.Split(strings.Join(s, "/"), "src/")
+		if len(str) > 0 {
+			return str[1]
+		}else {
+			return str[0]
+		}
 	}
 	return strings.Join(s, "/")
 }
