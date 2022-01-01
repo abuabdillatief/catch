@@ -1,6 +1,7 @@
 module github.com/abuabdillatief/catch
 
 go 1.15
+<<<<<<< HEAD
 
 require (
 	github.com/fatih/color v1.12.0
@@ -8,3 +9,5 @@ require (
 	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c // indirect
 	github.com/fatih/structs v1.1.0
 )
+=======
+>>>>>>> new

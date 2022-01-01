@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	print "github.com/abuabdillatief/catch/PrintType"
+	print "github.com/abuabdillatief/catch_test/catch/PrintType"
 	"github.com/fatih/color"
 	"github.com/fatih/structs"
 )
@@ -33,14 +33,20 @@ var (
 	Blue   = color.New(color.FgBlue).SprintFunc()
 	Green  = color.New(color.FgGreen).SprintFunc()
 	White  = color.New(color.FgWhite).SprintFunc()
+	YellowItalic = color.New(color.FgYellow).Add(color.Italic).SprintFunc()
+	RedItalic    = color.New(color.FgRed).Add(color.Italic).SprintFunc()
+	BlueItalic   = color.New(color.FgBlue).Add(color.Italic).SprintFunc()
+	GreenItalic  = color.New(color.FgGreen).Add(color.Italic).SprintFunc()
+	WhiteItalic  = color.New(color.FgWhite).Add(color.Italic).SprintFunc()
 )
 
 var C CatchLogger
 
 //====================================================
 func DirectoryFormater(dir string, printType print.PrintType) string {
-	s := strings.Split(dir, "/")
-	d := s[len(s)-1]
+	arr := strings.Split(dir, "/")
+	s := arr[:len(arr)-1]
+	d := arr[len(arr)-1]
 	if len(s) == 1 {
 		s = []string{}
 	}
@@ -56,11 +62,11 @@ func DirectoryFormater(dir string, printType print.PrintType) string {
 	case print.TypeSuccess:
 		s = append(s, color.New(color.FgGreen, color.Bold).Add(color.Underline).SprintFunc()(d))
 	}
-	if  len(strings.Split(strings.Join(s, "/"), "src/")) > 1 {
+	if len(strings.Split(strings.Join(s, "/"), "src/")) > 1 {
 		str := strings.Split(strings.Join(s, "/"), "src/")
 		if len(str) > 1 {
 			return str[1]
-		}else {
+		} else {
 			return str[0]
 		}
 	}
@@ -275,7 +281,7 @@ func PrintStructWithType(printType print.PrintType, s interface{}) {
 	clg := log.New(&B, "", log.Llongfile)
 	clg.Output(2, "")
 	inf := strings.Split(fmt.Sprintf("%v", &B), ":")
-	MapPrint(&printType, m, inf)
+	MapPrint(&printType, m, inf, 0)
 }
 
 // PrintStruct will print each structs keys and values
@@ -297,11 +303,37 @@ func PrintStruct(s interface{}) {
 	clg := log.New(&B, "", log.Llongfile)
 	clg.Output(2, "")
 	inf := strings.Split(fmt.Sprintf("%v", &B), ":")
-	MapPrint(nil, m, inf)
+	MapPrint(nil, m, inf, 0)
+}
+
+// PrintStruct will print each structs keys and values
+func PrintStructIndented(s interface{}, indentation int) {
+	if !structs.IsStruct(s) {
+		Print(print.TypeError, "no struct")
+		return
+	}
+	final := reflect.Indirect(reflect.ValueOf(s)).Interface()
+	t := reflect.TypeOf(final)
+	m := make(map[string]interface{})
+	for i := 0; i < t.NumField(); i++ {
+		str := fmt.Sprintf("%c", []byte{t.Field(i).Name[0]})
+		if strings.ToUpper(str) == str {
+			key := ""
+			for j := 0; j < indentation; j++ {
+				key += "  "
+			}
+			m[fmt.Sprintf(key+t.Field(i).Name)] = reflect.ValueOf(final).Field(i).Interface()
+		}
+	}
+	var B bytes.Buffer
+	clg := log.New(&B, "", log.Llongfile)
+	clg.Output(2, "")
+	inf := strings.Split(fmt.Sprintf("%v", &B), ":")
+	MapPrint(nil, m, inf, indentation)
 }
 
 // MapPrint will print keys and val inside a map
-func MapPrint(printType *print.PrintType, m map[string]interface{}, inf []string) {
+func MapPrint(printType *print.PrintType, m map[string]interface{}, inf []string, indentation int) {
 
 	line := inf[1]
 	dir := inf[0]
@@ -315,6 +347,10 @@ func MapPrint(printType *print.PrintType, m map[string]interface{}, inf []string
 
 	cd := "Current directory"
 	ei := "Line info"
+<<<<<<< HEAD
+=======
+
+>>>>>>> new
 	if len(l) > len(cd) {
 		cd += strings.Repeat(" ", len(l)-len(cd))
 	} else {
@@ -328,69 +364,122 @@ func MapPrint(printType *print.PrintType, m map[string]interface{}, inf []string
 		ei += strings.Repeat(" ", len(l)-len(ei))
 	}
 	ei += ":  "
-	strp := strings.Repeat("_", len(l))
-	log.Println(strp)
+	// strp := strings.Repeat("_", len(l))
 	var i int
 	var logFunc func(key1, key2, key3 interface{}, i int)
 
 	if printType == nil {
 		logFunc = func(key1, key2, key3 interface{}, i int) {
-			if i == 0 {
+			if i == 0 && indentation == 0 {
+				log.Println("==================")
 				log.Println(White(key3), DirectoryFormater(dir, print.TypeWarn))
 				log.Println(White(ei), fmt.Sprintf(`at line: %s`, Yellow(line)))
+				log.Println("==================")
 			}
-			log.Println(White(key1), key2)
+			if key2 != nil {
+				log.Println(White(key1), key2)
+			} else {
+				log.Println(WhiteItalic(key1))
+			}
 		}
 	} else {
 		logFunc = func(typePrint print.PrintType) func(key1, key2, key3 interface{}, i int) {
 			switch typePrint {
 			case print.TypeError:
 				return func(key1, key2, key3 interface{}, i int) {
-					if i == 0 {
+					if i == 0 && indentation == 0 {
+						log.Println("==================")
 						log.Println(Red(key3), DirectoryFormater(dir, print.TypeError))
 						log.Println(Red(ei), fmt.Sprintf(`at line: %s`, Yellow(line)))
+						log.Println("==================")
 					}
-					log.Println(Red(key1), key2)
+
+					if key2 != nil {
+						log.Println(Red(key1), key2)
+					} else {
+						log.Println(RedItalic(key1))
+
+					}
 				}
 			case print.TypeWarn:
 				return func(key1, key2, key3 interface{}, i int) {
-					if i == 0 {
+					if i == 0 && indentation == 0 {
+						log.Println("==================")
 						log.Println(Yellow(key3), DirectoryFormater(dir, print.TypeWarn))
 						log.Println(Yellow(ei), fmt.Sprintf(`at line: %s`, Yellow(line)))
+						log.Println("==================")
 					}
-					log.Println(Yellow(key1), key2)
+
+					if key2 != nil {
+						log.Println(Yellow(key1), key2)
+					} else {
+						log.Println(YellowItalic(key1))
+
+					}
 				}
 			case print.TypeInfo:
 				return func(key1, key2, key3 interface{}, i int) {
-					if i == 0 {
+					if i == 0 && indentation == 0 {
+						log.Println("==================")
 						log.Println(Blue(key3), DirectoryFormater(dir, print.TypeInfo))
 						log.Println(Blue(ei), fmt.Sprintf(`at line: %s`, Yellow(line)))
+						log.Println("==================")
 					}
-					log.Println(Blue(key1), key2)
+
+					if key2 != nil {
+						log.Println(Blue(key1), key2)
+					} else {
+						log.Println(BlueItalic(key1))
+
+					}
 				}
 			case print.TypeNeutral:
 				return func(key1, key2, key3 interface{}, i int) {
-					if i == 0 {
+					if i == 0 && indentation == 0 {
+						log.Println("==================")
 						log.Println(White(key3), DirectoryFormater(dir, print.TypeNeutral))
 						log.Println(White(ei), fmt.Sprintf(`at line: %s`, Yellow(line)))
+						log.Println("==================")
 					}
-					log.Println(White(key1), key2)
+
+					if key2 != nil {
+						log.Println(White(key1), key2)
+					} else {
+						log.Println(WhiteItalic(key1))
+
+					}
 				}
 			case print.TypeSuccess:
 				return func(key1, key2, key3 interface{}, i int) {
-					if i == 0 {
+					if i == 0 && indentation == 0 {
+						log.Println("==================")
 						log.Println(Green(key3), DirectoryFormater(dir, print.TypeSuccess))
 						log.Println(Green(ei), fmt.Sprintf(`at line: %s`, Yellow(line)))
+						log.Println("==================")
 					}
-					log.Println(Green(key1), key2)
+
+					if key2 != nil {
+						log.Println(Green(key1), key2)
+					} else {
+						log.Println(GreenItalic(key1))
+
+					}
 				}
 			default:
 				return func(key1, key2, key3 interface{}, i int) {
-					if i == 0 {
+					if i == 0 && indentation == 0 {
+						log.Println("==================")
 						log.Println(Blue(key3), DirectoryFormater(dir, print.TypeInfo))
 						log.Println(Blue(ei), fmt.Sprintf(`at line: %s`, Yellow(line)))
+						log.Println("==================")
 					}
-					log.Println(White(key1), key2)
+
+					if key2 != nil {
+						log.Println(White(key1), key2)
+					} else {
+						log.Println(WhiteItalic(key1))
+
+					}
 				}
 			}
 		}(*printType)
@@ -398,20 +487,29 @@ func MapPrint(printType *print.PrintType, m map[string]interface{}, inf []string
 
 	for key, val := range m {
 		d := cd
-		if len(key) != len(cd) {
-			if len(key) > len(cd) {
-				d += strings.Repeat(" ", len(key)-len(cd))
+		if reflect.ValueOf(val).Kind() == reflect.Struct {
+			logFunc(key, nil, d, i)
+			indentation++
+			PrintStructIndented(val, indentation)
+		} else {
+			if len(key) != len(cd) {
+				if len(key) > len(cd) {
+					d += strings.Repeat(" ", len(key)-len(cd))
 
-			} else if len(key) < len(cd) {
-				key += strings.Repeat(" ", len(cd)-len(key))
+				} else if len(key) < len(cd) {
+					key += strings.Repeat(" ", len(cd)-len(key))
+				}
 			}
+			d += ":  "
+			key += ":  "
+			logFunc(key, val, d, i)
 		}
-		d += ":  "
-		key += ":  "
-		logFunc(key, val, d, i)
 		i++
 	}
-	log.Printf("%s\n", strp)
+	if indentation > 0 {
+		indentation--
+	}
+	// log.Printf("%s\n", strp)
 }
 
 // SaveToLogfile will save your error message
@@ -473,7 +571,7 @@ func (c CatchLogger) CustomLog(printType print.PrintType) {
 	clg := log.New(&B, "", log.Llongfile)
 	clg.Output(2, "")
 	inf := strings.Split(fmt.Sprintf("%v", &B), ":")
-	MapPrint(&printType, c.Custom, inf)
+	MapPrint(&printType, c.Custom, inf, 0)
 	for key := range c.Custom {
 		delete(c.Custom, key)
 	}
