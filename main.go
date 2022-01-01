@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	print "github.com/abuabdillatief/catch_test/catch/PrintType"
+	print "github.com/abuabdillatief/catch/PrintType"
 	"github.com/fatih/color"
 	"github.com/fatih/structs"
 )
@@ -347,10 +347,6 @@ func MapPrint(printType *print.PrintType, m map[string]interface{}, inf []string
 
 	cd := "Current directory"
 	ei := "Line info"
-<<<<<<< HEAD
-=======
-
->>>>>>> new
 	if len(l) > len(cd) {
 		cd += strings.Repeat(" ", len(l)-len(cd))
 	} else {
