@@ -1,63 +1,50 @@
 # _Catch_
-__*catch*__ is a simple logging package which helps you read errors more easily and less frustrating.
+__*catch*__ is a simple logging package which helps you read errors more easily and less frustrating. Many more features are to be developed in the future, do contribute if you will, thank you 
 
 
 # Install:
-
     go get github.com/abuabdillatief/catch@latest
 
-# Examples:
-
-    type PrintType string
-
-    const (
-        TypeError PrintType = "Error"
-        TypeWarn  PrintType = "Warn"
-        TypeInfo  PrintType = "Info"
-    )
 ## Simple logging
-  	err := errors.New("mongo: no documents in result")
-	err2 := errors.New("file extension is not supported")
-	m := "error report from catch"
+	type Student struct {
+		Name        string
+		Age         int
+		Addres      Address
+		Nationality string
+	}
 
-    //create a new instance with our log file name
-	c := catch.NewLog("catch")
+	type Address struct {
+		Country     CountryDetail
+		Street      string
+		HouseNumber int64
+	}
 
-    //call log functions
-	c.Error(err, m)
-	c.Warn(err, m)
-	c.Inform(err)
+	type CountryDetail struct {
+		Country string
+		City    string
+	}
 
-![example of simple logigng](./assets/image.png)
+	func main() {
+		a := Student{
+			Addres: Address{
+				Country: CountryDetail{
+					Country: "Indonesia",
+					City:    "Pekabaru",
+				},
+				Street:      "Kulim",
+				HouseNumber: 10,
+			},
+			Age:         27,
+			Name:        "John Doe",
+			Nationality: "Indonesian",
+		}
+		catch.PrintStruct(a)
+	}
+#### Result
 
-## Custom logging
-    customLog := make(map[string]string)
-	
-	customLog["start"] = "0"
-	customLog["end"] = "15"
 
-	c.CustomLog(customLog, catch.TypeError)
-	c.CustomLog(customLog, catch.TypeWarn)
-	c.CustomLog(customLog, catch.TypeInfo)
+![Result](./assets/simple_log.png)
 
-![example of custom logigng](./assets/custom_log.png)
-
-
-    
-
-
-## Save and Delete log file
-
-    //save logs to predefined file which is "catch"
-	c.SaveToLogFile(err)
-	c.SaveToLogFile(err2)
-After saving log file, file will look like this:
-
-![example of custom loging](./assets/log_file.png)
-
-To delete log file, simply call:
-
-    c.DeleteLogFile()
 
 # Credits
 - [Color by fatih](https://github.com/fatih/color)
