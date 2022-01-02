@@ -6,6 +6,10 @@ __*catch*__ is a simple logging package which helps you read errors more easily 
     go get github.com/abuabdillatief/catch@latest
 
 ## Simple logging
+	package main
+
+	import "github.com/abuabdillatief/catch_test/catch"
+
 	type Student struct {
 		Name        string
 		Age         int
@@ -25,7 +29,9 @@ __*catch*__ is a simple logging package which helps you read errors more easily 
 	}
 
 	func main() {
-		a := Student{
+		a := []string{"re1", "re2"}
+
+		b := Student{
 			Addres: Address{
 				Country: CountryDetail{
 					Country: "Indonesia",
@@ -38,8 +44,20 @@ __*catch*__ is a simple logging package which helps you read errors more easily 
 			Name:        "John Doe",
 			Nationality: "Indonesian",
 		}
-		catch.PrintStruct(a)
+
+		c := make(map[string]string)
+		c["Age"] = "27"
+
+		d := []int{1, 3, 5, 5}
+		e := []string{"one", "two", "three"}
+
+		catch.Print(a)
+		catch.Print(b)
+		catch.Print(c)
+		catch.Print(d)
+		catch.Print(e)
 	}
+
 #### Result
 
 
